@@ -1,0 +1,83 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+name: fullstack-fastapi
+description: >
+  A reusable Cursor rule to scaffold and guide development of FastAPI-based backend
+  applications with SQLAlchemy models, RESTful API endpoints, and optional integrations
+  with third-party services. This rule supports multi-user apps, modern database design,
+  and frontend consumption through JSON APIs.
+
+trigger:
+  file: backend/**/*.py
+  context: |
+    You are working on a full-stack project using FastAPI as the backend framework.
+    The backend is written in Python 3.10+, uses SQLAlchemy (sync or async),
+    and serves a frontend (Angular/React/Vue) via RESTful endpoints.
+    The project may include third-party integrations (e.g., Plaid, Stripe, Auth0).
+    Data is stored in SQLite, PostgreSQL, or MySQL, depending on the deployment target.
+
+goals:
+  - Scaffold models with SQLAlchemy using good relational design (FKs, timestamps, etc.)
+  - Create RESTful FastAPI routes using clear naming conventions (e.g., /users, /items, /reports)
+  - Use Pydantic models for request/response validation
+  - Structure routes by resource (e.g., users, cards, transactions)
+  - Follow 12-factor principles (env config, modular structure)
+  - Support JSON response formats consumable by frontend apps
+  - Optionally integrate 3rd-party APIs with secrets stored in `.env`
+  - Use consistent naming and folder structure
+
+defaults:
+  db_url: sqlite:///app.db
+  folder_structure:
+    - app/
+        - models/
+        - routes/
+        - schemas/
+        - services/
+        - core/
+        - main.py
+  model_template:
+    BaseModel:
+      id: int
+      created_at: datetime
+      updated_at: datetime
+  example_models:
+    User:
+      id: int
+      name: str
+      email: str
+      password_hash: str
+      created_at: datetime
+    Item:
+      id: int
+      user_id: int (FK → User)
+      name: str
+      description: str
+      created_at: datetime
+
+endpoints:
+  - /users [GET, POST]
+  - /users/{user_id} [GET, PUT, DELETE]
+  - /items [GET, POST]
+  - /items/{item_id} [GET, PUT, DELETE]
+  - /health [GET]
+
+suggestions:
+  - Use dependency injection (`Depends`) for DB session
+  - Separate database models from API schemas
+  - Use environment variables from `.env` for sensitive config
+  - Organize routes using FastAPI routers
+  - Include pagination and filtering for list endpoints
+  - Include CORS middleware for frontend integration
+  - Create seed scripts or factories for dev testing
+
+tags:
+  - backend
+  - fastapi
+  - sql
+  - fullstack
+  - microservices
+  - rest

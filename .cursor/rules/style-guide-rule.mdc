@@ -1,0 +1,132 @@
+---
+description: A modern, minimalist, accessible design system for personal finance apps inspired by
+  top industry apps like Mint, Copilot, YNAB, and Rocket Money. Optimized for fast UI prototyping
+  using Tailwind CSS and Angular components, and AI coding assistants like Cursor.
+globs:
+alwaysApply: false
+---
+Angular + TailwindCSS + DaisyUI Prompt Generation Rules
+Component Generation Rules
+Analyze component requirements thoroughly before implementation.
+
+Suggest specific DaisyUI components suitable for Angular templates.
+
+Specify desired Tailwind CSS utility classes for styling; apply them directly in Angular templates (.html files).
+
+Define and use TypeScript interfaces or types for component inputs (@Input()), outputs (@Output()), and internal state.
+
+Include instructions for responsive design using Tailwind’s responsive variants (e.g., sm:, md:, lg:, xl:).
+
+Recommend Angular-specific features (e.g., ngIf, ngFor, Reactive Forms, Services, Dependency Injection) as appropriate.
+
+Specify any necessary state management (e.g., RxJS Subjects, Services, NgRx if used).
+
+Include accessibility considerations: use semantic HTML, ARIA attributes, and ensure keyboard navigation.
+
+Mention required icons or assets (suggest Heroicons or Font Awesome Angular for Angular).
+
+Suggest error handling and loading states using Angular’s built-in mechanisms (e.g., *ngIf, skeleton loaders, error messages).
+
+Include instructions for animations or transitions using Angular’s animation API or Tailwind’s transition classes.
+
+Specify any required API integrations or data fetching using Angular services and HttpClient.
+
+Mention performance optimization techniques (e.g., OnPush change detection, trackBy in *ngFor, lazy loading modules/components).
+
+Include instructions for testing the component using Jasmine/Karma (unit tests) and Cypress/Playwright (e2e tests).
+
+Suggest documentation requirements for the component (JSDoc for TypeScript, README updates, in-code comments).
+
+General Component Creation Guidelines
+Prioritize reusability and modularity; use Angular’s CLI for consistent structure.
+
+Ensure consistent naming conventions: kebab-case for files, PascalCase for classes.
+
+Follow Angular best practices: use @Input(), @Output(), services for logic, and keep templates declarative.
+
+Implement strict type checking and prop validation using TypeScript interfaces.
+
+Consider internationalization (i18n) using Angular’s built-in i18n tools.
+
+Ensure browser and device compatibility; test across major browsers and devices.
+
+General Rules
+Enable strict TypeScript mode (strict: true in tsconfig.json).
+
+Avoid any; prefer unknown with runtime checks when necessary.
+
+Explicitly type all function inputs and outputs.
+
+Use advanced TypeScript features (type guards, mapped types, conditional types).
+
+Organize project structure: components/, services/, models/, utils/, assets/, styles/.
+
+Separate concerns: presentational components, business logic (services), side effects (effects/services).
+
+Use Biome for code formatting and linting; configure as a pre-commit hook.
+
+Angular-Specific Rules
+Use Angular CLI for generating components, services, and modules.
+
+Use Reactive Forms for complex forms; Template-driven forms for simple cases.
+
+Use OnPush change detection for performance.
+
+Prefer standalone components where appropriate (Angular 15+).
+
+Use trackBy in *ngFor for lists to optimize rendering.
+
+Use HttpClient for API calls; centralize API logic in services.
+
+Use Angular Router for navigation; prefer lazy loading for feature modules.
+
+Validate and sanitize all user input and route parameters.
+
+Use RxJS for state management and async data streams.
+
+TailwindCSS and DaisyUI Rules
+Use TailwindCSS utility classes for styling; avoid custom CSS unless necessary.
+
+Maintain consistent order of utility classes.
+
+Use Tailwind’s responsive variants for adaptive designs.
+
+Leverage DaisyUI components in Angular templates for rapid development.
+
+Customize DaisyUI components only when necessary.
+
+Define and use design tokens in tailwind.config.js for colors, spacing, etc.
+
+Add Tailwind directives in src/styles.css or src/styles.scss:
+
+css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+Configure tailwind.config.js content paths to include Angular files:
+
+js
+content: ["./src/**/*.{html,ts}"]
+Development Process
+Conduct thorough code reviews via Pull Requests; include clear PR descriptions and screenshots.
+
+Implement comprehensive automated testing (unit, integration, e2e).
+
+Use Conventional Commits for commit messages (feat:, fix:, docs:, chore:).
+
+Make small, incremental commits for easier review and debugging.
+
+Biome Rules
+Use Biome for code formatting and linting; configure as a pre-commit hook.
+
+Follow Biome’s recommended rules; customize as needed in biome.json.
+
+Ensure consistent code style and run Biome checks before committing.
+
+Address all Biome warnings and errors promptly.
+
+Use Biome’s organize imports feature.
+
+Integrate Biome into CI/CD for automated checks.
+
+Keep Biome updated to the latest stable version.

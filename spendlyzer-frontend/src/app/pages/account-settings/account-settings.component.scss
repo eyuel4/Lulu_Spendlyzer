@@ -1,0 +1,202 @@
+// Custom scrollbar for dark theme
+.notification-dropdown {
+  .overflow-y-auto {
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+      
+      &:hover {
+        background: #64748b;
+      }
+    }
+  }
+}
+
+// Form validation styles
+.form-error {
+  @apply text-red-600 dark:text-red-400 text-sm mt-1;
+}
+
+.form-success {
+  @apply text-green-600 dark:text-green-400 text-sm mt-1;
+}
+
+// Modal backdrop blur
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+}
+
+// Smooth transitions for all interactive elements
+button, input, select, textarea {
+  transition: all 0.2s ease-in-out;
+}
+
+// Focus ring customization
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:ring-offset-2 dark:focus:ring-offset-slate-800;
+}
+
+// Custom checkbox styling
+input[type="checkbox"] {
+  @apply rounded border-slate-300 dark:border-slate-600 text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700;
+}
+
+// Custom select styling
+select {
+  @apply appearance-none bg-no-repeat bg-right pr-10;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-size: 1.5em 1.5em;
+}
+
+// Dark theme select arrow
+.dark select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%39ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
+// Tab indicator animation
+.tab-indicator {
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #6366f1;
+    transform: scaleX(0);
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  &.active::after {
+    transform: scaleX(1);
+  }
+}
+
+// Loading skeleton animation
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Card hover effects
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-md hover:scale-[1.02];
+}
+
+// Button loading state
+.btn-loading {
+  @apply relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Status badge animations
+.status-badge {
+  @apply transition-all duration-200;
+  
+  &:hover {
+    @apply scale-105;
+  }
+}
+
+// Modal animations
+.modal-enter {
+  animation: modalEnter 0.2s ease-out;
+}
+
+.modal-exit {
+  animation: modalExit 0.2s ease-in;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .tab-navigation {
+    @apply flex-wrap;
+    
+    button {
+      @apply flex-1 text-xs;
+    }
+  }
+  
+  .modal-content {
+    @apply mx-4 max-w-sm;
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .border-slate-200 {
+    border-color: #000;
+  }
+  
+  .dark .border-slate-700 {
+    border-color: #fff;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+} 

@@ -1,0 +1,27 @@
+// Card and form styling
+:host {
+  display: block;
+}
+
+.bg-white, .dark .bg-slate-800 {
+  box-shadow: 0 2px 16px 0 rgb(30 41 59 / 0.06);
+}
+
+textarea {
+  min-height: 120px;
+  font-size: 1rem;
+  resize: none;
+}
+
+button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+// Success and error message styles
+.success-message {
+  @apply text-green-600 dark:text-green-400 text-sm mt-1;
+}
+.error-message {
+  @apply text-red-600 dark:text-red-400 text-sm mt-1;
+} 

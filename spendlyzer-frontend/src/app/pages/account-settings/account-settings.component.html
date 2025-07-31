@@ -1,0 +1,744 @@
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+  <!-- Header -->
+  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 transition-colors duration-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Back Button and Title -->
+        <div class="flex items-center space-x-4">
+          <button 
+            (click)="goBack()"
+            class="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200"
+          >
+            <svg class="w-5 h-5 text-slate-700 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <h1 class="text-xl font-semibold text-slate-900 dark:text-white transition-colors duration-200">Account & Settings</h1>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 dark:border-indigo-400 mx-auto mb-4"></div>
+      <p class="text-slate-600 dark:text-slate-400">Loading settings...</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main *ngIf="!loading" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Tab Navigation -->
+    <div class="mb-8">
+      <nav class="flex space-x-8 border-b border-slate-200 dark:border-slate-700">
+        <button 
+          (click)="setActiveTab('security')"
+          class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200"
+          [ngClass]="activeTab === 'security' 
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'"
+        >
+          Security
+        </button>
+        <button 
+          (click)="setActiveTab('notifications')"
+          class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200"
+          [ngClass]="activeTab === 'notifications' 
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'"
+        >
+          Notifications
+        </button>
+        <button 
+          (click)="setActiveTab('family')"
+          class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200"
+          [ngClass]="activeTab === 'family' 
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'"
+        >
+          Family & Group
+        </button>
+        <button 
+          (click)="setActiveTab('privacy')"
+          class="py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200"
+          [ngClass]="activeTab === 'privacy' 
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' 
+            : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'"
+        >
+          Privacy
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="space-y-8">
+      <!-- Security Settings -->
+      <div *ngIf="activeTab === 'security'" class="space-y-6">
+        <!-- Two-Factor Authentication -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Two-Factor Authentication</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400">
+                Add an extra layer of security to your account
+              </p>
+            </div>
+            <span 
+              class="px-3 py-1 text-sm font-medium rounded-full"
+              [ngClass]="twoFactorSettings?.enabled 
+                ? 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20' 
+                : 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20'"
+            >
+              {{ twoFactorSettings?.enabled ? 'Enabled' : 'Disabled' }}
+            </span>
+          </div>
+          
+          <div class="space-y-3">
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              {{ twoFactorSettings?.enabled 
+                ? 'Two-factor authentication is enabled using ' + twoFactorSettings?.method + '.'
+                : 'Two-factor authentication adds an extra layer of security by requiring a second form of verification.' }}
+            </p>
+            
+            <div class="flex space-x-3">
+              <button 
+                *ngIf="!twoFactorSettings?.enabled"
+                (click)="showTwoFactorModal = true"
+                class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+              >
+                Enable 2FA
+              </button>
+              <button 
+                *ngIf="twoFactorSettings?.enabled"
+                (click)="disableTwoFactor()"
+                class="px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+              >
+                Disable 2FA
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Change -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Email Address</h3>
+          <form [formGroup]="emailChangeForm" (ngSubmit)="updateEmail()" class="space-y-4">
+            <div>
+              <label for="newEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                New Email Address
+              </label>
+              <input 
+                type="email" 
+                id="newEmail"
+                formControlName="newEmail"
+                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors duration-200"
+                placeholder="Enter your new email address"
+              >
+            </div>
+            
+            <div>
+              <label for="confirmEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Confirm New Email Address
+              </label>
+              <input 
+                type="email" 
+                id="confirmEmail"
+                formControlName="confirmEmail"
+                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors duration-200"
+                placeholder="Confirm your new email address"
+              >
+              <p *ngIf="emailChangeForm.errors?.['emailMismatch']" class="text-xs text-red-600 dark:text-red-400 mt-1">
+                Email addresses do not match
+              </p>
+            </div>
+            
+            <button 
+              type="submit"
+              [disabled]="!emailChangeForm.valid"
+              class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            >
+              Update Email
+            </button>
+          </form>
+        </div>
+
+        <!-- Active Sessions -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Active Sessions</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400">
+                Manage your active sessions across devices
+              </p>
+            </div>
+            <button 
+              (click)="showSessionModal = true"
+              class="px-4 py-2 bg-slate-600 dark:bg-slate-500 text-white rounded-lg hover:bg-slate-700 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+            >
+              View All
+            </button>
+          </div>
+          
+          <div class="space-y-3">
+            <div *ngFor="let session of activeSessions.slice(0, 3)" class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-slate-900 dark:text-white">{{ session.device_info || session.user_agent || 'Unknown Device' }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">IP: {{ session.ip_address || 'N/A' }} • Last Active: {{ session.last_active_at | date:'short' }}</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span 
+                  *ngIf="session.is_current"
+                  class="px-2 py-1 text-xs font-medium text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20 rounded-full border border-green-200 dark:border-green-700"
+                >
+                  Current
+                </span>
+                <button 
+                  *ngIf="!session.is_current"
+                  (click)="logoutFromSession(session)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div *ngIf="activeSessions.length === 0" class="text-center py-4">
+              <p class="text-slate-500 dark:text-slate-400">No active sessions found</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Reset -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Password</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+            Reset your password by sending a secure link to your email address.
+          </p>
+          <button 
+            (click)="resetPassword()"
+            class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+          >
+            Reset Password
+          </button>
+        </div>
+      </div>
+
+      <!-- Notification Settings -->
+      <div *ngIf="activeTab === 'notifications'" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Notification Preferences</h2>
+        
+        <form [formGroup]="notificationForm" (ngSubmit)="updateNotificationSettings()" class="space-y-6">
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Email Notifications</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Receive notifications via email</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="emailNotifications"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Push Notifications</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Receive push notifications in browser</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="pushNotifications"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Transaction Alerts</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Get notified about new transactions</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="transactionAlerts"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Budget Alerts</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Get notified when approaching budget limits</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="budgetAlerts"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Family Updates</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Get notified about family member activities</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="familyUpdates"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Marketing Emails</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Receive promotional and marketing emails</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="marketingEmails"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+          </div>
+          
+          <button 
+            type="submit"
+            class="w-full px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+          >
+            Save Notification Settings
+          </button>
+        </form>
+      </div>
+
+      <!-- Family & Group Management -->
+      <div *ngIf="activeTab === 'family'" class="space-y-6">
+        <!-- Account Type Card -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Account Type</h2>
+            <span 
+              class="px-3 py-1 text-sm font-medium rounded-full"
+              [ngClass]="accountType === 'family' 
+                ? 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20' 
+                : 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20'"
+            >
+              {{ accountType === 'family' ? 'Family Account' : 'Personal Account' }}
+            </span>
+          </div>
+          
+          <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+            {{ accountType === 'family' 
+              ? 'Your account is set up for family sharing. You can manage family members and their access below.' 
+              : 'Your account is currently personal. You can convert to a family account to share with family members.' }}
+          </p>
+          
+          <button 
+            *ngIf="accountType === 'personal'"
+            (click)="showInviteForm()"
+            class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+          >
+            Convert to Family Account
+          </button>
+        </div>
+
+        <!-- Family Members -->
+        <div *ngIf="accountType === 'family'" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Family Members</h2>
+            <button 
+              (click)="showInviteForm()"
+              class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+            >
+              Invite Member
+            </button>
+          </div>
+          
+          <div class="space-y-4">
+            <div *ngFor="let member of familyMembers" class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                  <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                    {{ member.first_name.charAt(0) }}{{ member.last_name.charAt(0) }}
+                  </span>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-slate-900 dark:text-white">
+                    {{ member.first_name }} {{ member.last_name }}
+                  </p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ member.email }}</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-3">
+                <span 
+                  class="px-2 py-1 text-xs font-medium rounded-full"
+                  [ngClass]="getMemberStatusColor(member.status)"
+                >
+                  {{ member.status }}
+                </span>
+                <button 
+                  (click)="removeFamilyMember(member)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div *ngIf="familyMembers.length === 0" class="text-center py-8">
+              <p class="text-slate-500 dark:text-slate-400">No family members yet. Invite someone to get started!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Invitations -->
+        <div *ngIf="invitations.length > 0" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+          <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Pending Invitations</h2>
+          
+          <div class="space-y-4">
+            <div *ngFor="let invitation of invitations" class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+              <div>
+                <p class="text-sm font-medium text-slate-900 dark:text-white">
+                  {{ invitation.first_name }} {{ invitation.last_name }}
+                </p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">{{ invitation.email }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                  Sent {{ formatDate(invitation.sent_at) }} • 
+                  Expires in {{ getDaysUntilExpiry(invitation.expires_at) }} days
+                </p>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span 
+                  class="px-2 py-1 text-xs font-medium rounded-full"
+                  [ngClass]="getInvitationStatusColor(invitation.status)"
+                >
+                  {{ invitation.status }}
+                </span>
+                <button 
+                  (click)="resendInvitation(invitation)"
+                  class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors duration-200"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                </button>
+                <button 
+                  (click)="cancelInvitation(invitation)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacy Settings -->
+      <div *ngIf="activeTab === 'privacy'" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Privacy Settings</h2>
+        
+        <form [formGroup]="privacyForm" (ngSubmit)="updatePrivacySettings()" class="space-y-6">
+          <div>
+            <label for="profileVisibility" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Profile Visibility
+            </label>
+            <select 
+              id="profileVisibility"
+              formControlName="profileVisibility"
+              class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors duration-200"
+            >
+              <option value="private">Private</option>
+              <option value="family">Family Only</option>
+              <option value="public">Public</option>
+            </select>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Data Sharing</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Allow sharing of your data for research purposes</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="dataSharing"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Analytics Sharing</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Help us improve by sharing usage analytics</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="analyticsSharing"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-medium text-slate-900 dark:text-white">Family Access</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Allow family members to view your financial data</p>
+              </div>
+              <input 
+                type="checkbox" 
+                formControlName="allowFamilyAccess"
+                class="h-4 w-4 text-indigo-600 dark:text-indigo-400 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:focus:ring-indigo-400 bg-white dark:bg-slate-700"
+              >
+            </div>
+          </div>
+          
+          <button 
+            type="submit"
+            class="w-full px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+          >
+            Save Privacy Settings
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Account Conversion Warning Modal -->
+  <div *ngIf="showConversionWarning" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
+      <div class="flex items-center mb-4">
+        <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center mr-3">
+          <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Convert to Family Account</h3>
+      </div>
+      
+      <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">
+        Converting to a family account will allow you to share your financial data with family members. 
+        This action cannot be undone. Are you sure you want to proceed?
+      </p>
+      
+      <div class="flex space-x-3">
+        <button 
+          (click)="cancelAccountConversion()"
+          class="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+        >
+          Cancel
+        </button>
+        <button 
+          (click)="confirmAccountConversion()"
+          class="flex-1 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+        >
+          Convert Account
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invitation Modal -->
+  <div *ngIf="showInviteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Invite Family Member</h3>
+      
+      <form class="space-y-4">
+        <div>
+          <label for="inviteEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Email Address
+          </label>
+          <input 
+            type="email" 
+            id="inviteEmail"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors duration-200"
+            placeholder="Enter email address"
+          >
+        </div>
+        
+        <div>
+          <label for="inviteRole" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Role
+          </label>
+          <select 
+            id="inviteRole"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors duration-200"
+          >
+            <option value="member">Member</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        
+        <div class="flex space-x-3 pt-4">
+          <button 
+            type="button"
+            (click)="showInviteModal = false"
+            class="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            (click)="sendInvitation({email: 'test@example.com', role: 'member'})"
+            class="flex-1 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+          >
+            Send Invitation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Two-Factor Authentication Modal -->
+  <div *ngIf="showTwoFactorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6">
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Enable Two-Factor Authentication</h3>
+      
+      <div class="space-y-4">
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          Choose your preferred method for two-factor authentication:
+        </p>
+        
+        <div class="space-y-3">
+          <button 
+            (click)="enableTwoFactor('authenticator')"
+            class="w-full flex items-center justify-between p-3 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
+          >
+            <div class="flex items-center space-x-3">
+              <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              <div class="text-left">
+                <p class="text-sm font-medium text-slate-900 dark:text-white">Authenticator App</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Google Authenticator, Authy, etc.</p>
+              </div>
+            </div>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+          
+          <button 
+            (click)="enableTwoFactor('sms')"
+            class="w-full flex items-center justify-between p-3 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
+          >
+            <div class="flex items-center space-x-3">
+              <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+              </svg>
+              <div class="text-left">
+                <p class="text-sm font-medium text-slate-900 dark:text-white">SMS</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Text message to your phone</p>
+              </div>
+            </div>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+          
+          <button 
+            (click)="enableTwoFactor('email')"
+            class="w-full flex items-center justify-between p-3 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
+          >
+            <div class="flex items-center space-x-3">
+              <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+              <div class="text-left">
+                <p class="text-sm font-medium text-slate-900 dark:text-white">Email</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Email to your registered address</p>
+              </div>
+            </div>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="flex space-x-3 pt-4">
+          <button 
+            type="button"
+            (click)="showTwoFactorModal = false"
+            class="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session Management Modal -->
+  <div *ngIf="showSessionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Active Sessions</h3>
+        <button 
+          (click)="logoutFromAllSessions()"
+          class="px-4 py-2 bg-red-600 dark:bg-red-500 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+        >
+          Logout All
+        </button>
+      </div>
+      
+      <div class="space-y-3 max-h-96 overflow-y-auto">
+        <div *ngFor="let session of activeSessions" class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-900 dark:text-white">{{ session.device_info || session.user_agent || 'Unknown Device' }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">{{ session.ip_address || 'N/A' }} • Last Active: {{ session.last_active_at | date:'short' }}</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span 
+              *ngIf="session.is_current"
+              class="px-2 py-1 text-xs font-medium text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20 rounded-full"
+            >
+              Current
+            </span>
+            <button 
+              *ngIf="!session.is_current"
+              (click)="logoutFromSession(session)"
+              class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <div *ngIf="activeSessions.length === 0" class="text-center py-8">
+          <p class="text-slate-500 dark:text-slate-400">No active sessions found</p>
+        </div>
+      </div>
+      
+      <div class="flex justify-end mt-6">
+        <button 
+          (click)="showSessionModal = false"
+          class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 

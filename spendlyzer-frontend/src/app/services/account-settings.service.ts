@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
@@ -61,12 +61,21 @@ export interface AccountType {
 }
 
 export interface Session {
-  id: string;
+  id: number;
+  user_id?: number;
+  token_jti?: string;
   device_info?: string;
   ip_address?: string;
   user_agent?: string;
+  created_at?: string;
   last_active_at?: string;
   is_current?: boolean;
+  // UI-specific fields
+  device?: string;
+  location?: string;
+  lastActive?: string;
+  isCurrent?: boolean;
+  ipAddress?: string;
 }
 
 export interface TwoFactorSettings {
@@ -74,6 +83,20 @@ export interface TwoFactorSettings {
   method: 'sms' | 'email' | 'authenticator';
   phoneNumber?: string;
   backupCodes: string[];
+}
+
+export interface TwoFactorCodeResponse {
+  success: boolean;
+  message: string;
+  expiresAt?: string;
+  method: 'sms' | 'email' | 'authenticator';
+}
+
+export interface ResendCodeResponse {
+  success: boolean;
+  message: string;
+  expiresAt: string;
+  method: 'sms' | 'email';
 }
 
 @Injectable({
@@ -118,34 +141,69 @@ export class AccountSettingsService {
 
   // Session Management
   getActiveSessions(): Observable<Session[]> {
-    const url = `${this.apiUrl}/users/sessions`;
+    const url = `${this.apiUrl}/sessions`;
+    const token = this.authService.getToken();
+    console.log('Fetching sessions from:', url);
+    console.log('Token available:', !!token);
+    
+    if (!token) {
+      console.error('No authentication token available');
+      return of([]);
+    }
+    
     return this.http.get<any[]>(url).pipe(
       // Map backend fields to UI fields
-      tap(sessions => {
-        sessions.forEach(session => {
-          session.device = session.device_info || session.user_agent || 'Unknown Device';
-          session.location = session.ip_address || 'Unknown Location';
-          session.lastActive = session.last_active_at;
-          session.isCurrent = session.is_current;
-          session.ipAddress = session.ip_address;
-        });
+      map((sessions: any[]) => {
+        console.log('Raw sessions from API:', sessions);
+        if (!sessions || sessions.length === 0) {
+          console.log('No sessions found in database');
+          return [];
+        }
+        return sessions.map((session: any) => ({
+          ...session,
+          device: session.device_info || session.user_agent || 'Unknown Device',
+          location: session.ip_address || 'Unknown Location',
+          lastActive: session.last_active_at,
+          isCurrent: session.is_current,
+          ipAddress: session.ip_address
+        }));
+      }),
+      tap((mappedSessions: Session[]) => {
+        console.log('Processed sessions:', mappedSessions);
+      }),
+      catchError((error) => {
+        console.error('Session API error:', error);
+        console.error('Error details:', error.status, error.message);
+        // Return empty array instead of throwing error to show "No active sessions"
+        return of([]);
+      })
+    );
+  }
+
+  logoutFromSession(sessionId: string): Observable<any> {
+    const url = `${this.apiUrl}/sessions/${sessionId}`;
+    return this.http.delete(url).pipe(
+      tap((response: any) => {
+        console.log('Session logged out successfully');
+        // If logout is required, clear local storage
+        if (response.logout_required) {
+          this.authService.logout();
+        }
       }),
       catchError(this.handleError)
     );
   }
 
-  logoutFromSession(sessionId: string): Observable<any> {
-    const url = `${this.apiUrl}/users/sessions/${sessionId}`;
-    return this.http.delete(url).pipe(
-      tap(() => console.log('Session logged out successfully')),
-      catchError(this.handleError)
-    );
-  }
-
   logoutFromAllSessions(): Observable<any> {
-    const url = `${this.apiUrl}/users/sessions`;
+    const url = `${this.apiUrl}/sessions`;
     return this.http.delete(url).pipe(
-      tap(() => console.log('All sessions logged out successfully')),
+      tap((response: any) => {
+        console.log('All sessions logged out successfully');
+        // If logout is required, clear local storage and redirect
+        if (response.logout_required) {
+          this.authService.logout();
+        }
+      }),
       catchError(this.handleError)
     );
   }
@@ -154,13 +212,17 @@ export class AccountSettingsService {
   getTwoFactorSettings(): Observable<TwoFactorSettings> {
     const url = `${this.apiUrl}/users/2fa/settings`;
     return this.http.get<TwoFactorSettings>(url).pipe(
-      catchError(this.handleError)
+      catchError(() => of({ enabled: false, method: 'authenticator' as const, backupCodes: [] }))
     );
   }
 
   enableTwoFactor(method: 'sms' | 'email' | 'authenticator', phoneNumber?: string): Observable<any> {
     const url = `${this.apiUrl}/users/2fa/enable`;
-    return this.http.post(url, { method, phoneNumber }).pipe(
+    const payload: any = { method };
+    if (phoneNumber) {
+      payload.phone_number = phoneNumber;
+    }
+    return this.http.post(url, payload).pipe(
       tap(() => console.log('Two-factor authentication enabled')),
       catchError(this.handleError)
     );
@@ -174,17 +236,158 @@ export class AccountSettingsService {
     );
   }
 
+  // Send 2FA code with expiration (for SMS and Email)
+  sendTwoFactorCode(method: 'sms' | 'email', phoneNumber?: string): Observable<TwoFactorCodeResponse> {
+    const url = `${this.apiUrl}/users/2fa/send-code`;
+    const payload: any = { method };
+    if (method === 'sms' && phoneNumber) {
+      payload.phone_number = phoneNumber;
+    }
+    
+    // Get token (regular or temporary for 2FA flow)
+    const token = this.authService.getToken() || (typeof window !== 'undefined' ? localStorage.getItem('temp_2fa_token') : null);
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    return this.http.post<TwoFactorCodeResponse>(url, payload, { headers }).pipe(
+      tap((response) => {
+        console.log(`${method.toUpperCase()} verification code sent successfully`);
+        if (response.expiresAt) {
+          console.log(`Code expires at: ${response.expiresAt}`);
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  // Send 2FA setup verification code (for SMS and Email during setup)
+  sendSetupVerificationCode(method: 'sms' | 'email', phoneNumber?: string): Observable<TwoFactorCodeResponse> {
+    const url = `${this.apiUrl}/users/2fa/send-setup-code`;
+    const payload: any = { method };
+    if (method === 'sms' && phoneNumber) {
+      payload.phone_number = phoneNumber;
+    }
+    
+    // Get token (regular or temporary for 2FA flow)
+    const token = this.authService.getToken() || (typeof window !== 'undefined' ? localStorage.getItem('temp_2fa_token') : null);
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    return this.http.post<TwoFactorCodeResponse>(url, payload, { headers }).pipe(
+      tap((response) => {
+        console.log(`${method.toUpperCase()} setup verification code sent successfully`);
+        if (response.expiresAt) {
+          console.log(`Code expires at: ${response.expiresAt}`);
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  // Send 2FA login verification code (for SMS and Email during login)
+  sendLoginVerificationCode(method: 'sms' | 'email', phoneNumber?: string): Observable<TwoFactorCodeResponse> {
+    const url = `${this.apiUrl}/users/2fa/send-login-code`;
+    const payload: any = { method };
+    if (method === 'sms' && phoneNumber) {
+      payload.phone_number = phoneNumber;
+    }
+    
+    // Get temporary token for login flow
+    const token = (typeof window !== 'undefined' ? localStorage.getItem('temp_2fa_token') : null) || this.authService.getToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    return this.http.post<TwoFactorCodeResponse>(url, payload, { headers }).pipe(
+      tap((response) => {
+        console.log(`${method.toUpperCase()} login verification code sent successfully`);
+        if (response.expiresAt) {
+          console.log(`Code expires at: ${response.expiresAt}`);
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  // Resend 2FA code (only for SMS and Email, not for authenticator apps)
+  resendTwoFactorCode(method: 'sms' | 'email'): Observable<ResendCodeResponse> {
+    const url = `${this.apiUrl}/users/2fa/resend-code`;
+    const payload = { method };
+    
+    // Get token (regular or temporary for 2FA flow)
+    const token = this.authService.getToken() || (typeof window !== 'undefined' ? localStorage.getItem('temp_2fa_token') : null);
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    return this.http.post<ResendCodeResponse>(url, payload, { headers }).pipe(
+      tap((response) => {
+        console.log(`${method.toUpperCase()} verification code resent successfully`);
+        console.log(`Code expires at: ${response.expiresAt}`);
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  // Verify 2FA code during setup
+  verify2FACode(code: string): Observable<any> {
+    const url = `${this.apiUrl}/users/2fa/verify-setup`;
+    const payload = { code };
+    
+    // Get token (regular or temporary for 2FA flow)
+    const token = this.authService.getToken() || (typeof window !== 'undefined' ? localStorage.getItem('temp_2fa_token') : null);
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    return this.http.post(url, payload, { headers }).pipe(
+      tap(() => console.log('2FA setup verification successful')),
+      catchError(this.handleError)
+    );
+  }
+
+  // Check if resend is available for the given 2FA method
+  canResendCode(method: 'sms' | 'email' | 'authenticator'): boolean {
+    return method === 'sms' || method === 'email';
+  }
+
+  // Get expiration message for display
+  getExpirationMessage(expiresAt: string): string {
+    const expiryDate = new Date(expiresAt);
+    const now = new Date();
+    const diffInMinutes = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes <= 0) {
+      return 'Code has expired. Please request a new one.';
+    } else if (diffInMinutes === 1) {
+      return 'Code expires in 1 minute.';
+    } else {
+      return `Code expires in ${diffInMinutes} minutes.`;
+    }
+  }
+
   // Notification Settings
   getNotificationSettings(): Observable<NotificationSettings> {
     const url = `${this.apiUrl}/users/notification-settings`;
-    return this.http.get<NotificationSettings>(url).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<NotificationSettings>(url, { headers }).pipe(
       catchError(this.handleError)
     );
   }
 
   updateNotificationSettings(settings: NotificationSettings): Observable<any> {
     const url = `${this.apiUrl}/users/notification-settings`;
-    return this.http.put(url, settings).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.put(url, settings, { headers }).pipe(
       tap(() => console.log('Notification settings updated successfully')),
       catchError(this.handleError)
     );
@@ -193,14 +396,18 @@ export class AccountSettingsService {
   // Privacy Settings
   getPrivacySettings(): Observable<PrivacySettings> {
     const url = `${this.apiUrl}/users/privacy-settings`;
-    return this.http.get<PrivacySettings>(url).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<PrivacySettings>(url, { headers }).pipe(
       catchError(this.handleError)
     );
   }
 
   updatePrivacySettings(settings: PrivacySettings): Observable<any> {
     const url = `${this.apiUrl}/users/privacy-settings`;
-    return this.http.put(url, settings).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.put(url, settings, { headers }).pipe(
       tap(() => console.log('Privacy settings updated successfully')),
       catchError(this.handleError)
     );
@@ -209,7 +416,9 @@ export class AccountSettingsService {
   // Family Management
   getAccountType(): Observable<AccountType> {
     const url = `${this.apiUrl}/users/account-type`;
-    return this.http.get<AccountType>(url).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<AccountType>(url, { headers }).pipe(
       tap(accountType => this.accountTypeSubject.next(accountType)),
       catchError(this.handleError)
     );
@@ -217,7 +426,9 @@ export class AccountSettingsService {
 
   convertToFamilyAccount(): Observable<any> {
     const url = `${this.apiUrl}/users/convert-to-family`;
-    return this.http.post(url, {}).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.post(url, {}, { headers }).pipe(
       tap(() => {
         this.accountTypeSubject.next({ type: 'family' });
         console.log('Account converted to family successfully');
@@ -228,7 +439,9 @@ export class AccountSettingsService {
 
   getFamilyMembers(): Observable<FamilyMember[]> {
     const url = `${this.apiUrl}/family/members`;
-    return this.http.get<FamilyMember[]>(url).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<FamilyMember[]>(url, { headers }).pipe(
       tap(members => this.familyMembersSubject.next(members)),
       catchError(this.handleError)
     );
@@ -236,7 +449,9 @@ export class AccountSettingsService {
 
   getInvitations(): Observable<Invitation[]> {
     const url = `${this.apiUrl}/family/invitations`;
-    return this.http.get<Invitation[]>(url).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<Invitation[]>(url, { headers }).pipe(
       tap(invitations => this.invitationsSubject.next(invitations)),
       catchError(this.handleError)
     );
@@ -244,7 +459,9 @@ export class AccountSettingsService {
 
   sendInvitation(invitation: InvitationRequest): Observable<any> {
     const url = `${this.apiUrl}/family/invitations`;
-    return this.http.post(url, invitation).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.post(url, invitation, { headers }).pipe(
       tap(() => {
         console.log('Invitation sent successfully');
         // Refresh invitations list
@@ -256,7 +473,9 @@ export class AccountSettingsService {
 
   resendInvitation(invitationId: number): Observable<any> {
     const url = `${this.apiUrl}/family/invitations/${invitationId}/resend`;
-    return this.http.post(url, {}).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.post(url, {}, { headers }).pipe(
       tap(() => console.log('Invitation resent successfully')),
       catchError(this.handleError)
     );
@@ -264,7 +483,9 @@ export class AccountSettingsService {
 
   cancelInvitation(invitationId: number): Observable<any> {
     const url = `${this.apiUrl}/family/invitations/${invitationId}`;
-    return this.http.delete(url).pipe(
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.delete(url, { headers }).pipe(
       tap(() => {
         console.log('Invitation cancelled successfully');
         // Refresh invitations list
@@ -309,62 +530,6 @@ export class AccountSettingsService {
     throw error;
   }
 
-  // Mock data methods for development
-  getMockFamilyMembers(): FamilyMember[] {
-    return [
-      {
-        id: 1,
-        first_name: 'John',
-        last_name: 'Doe',
-        email: 'john.doe@example.com',
-        role: 'Member',
-        status: 'active',
-        joined_at: '2024-01-15'
-      },
-      {
-        id: 2,
-        first_name: 'Jane',
-        last_name: 'Smith',
-        email: 'jane.smith@example.com',
-        role: 'Member',
-        status: 'pending'
-      }
-    ];
-  }
 
-  getMockInvitations(): Invitation[] {
-    return [
-      {
-        id: 1,
-        email: 'partner@example.com',
-        first_name: 'Partner',
-        last_name: 'Name',
-        role: 'Member',
-        status: 'pending',
-        sent_at: '2024-01-20T10:00:00Z',
-        expires_at: '2024-01-27T10:00:00Z'
-      }
-    ];
-  }
 
-  // Development mode methods
-  getMockNotificationSettings(): NotificationSettings {
-    return {
-      emailNotifications: true,
-      pushNotifications: true,
-      transactionAlerts: true,
-      budgetAlerts: true,
-      familyUpdates: true,
-      marketingEmails: false
-    };
-  }
-
-  getMockPrivacySettings(): PrivacySettings {
-    return {
-      profileVisibility: 'private',
-      dataSharing: false,
-      analyticsSharing: true,
-      allowFamilyAccess: true
-    };
-  }
 } 

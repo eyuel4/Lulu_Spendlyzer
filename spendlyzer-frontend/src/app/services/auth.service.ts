@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { CacheService } from './cache.service';
 // @ts-ignore
 import UAParser from 'ua-parser-js';
@@ -22,6 +22,12 @@ export interface SigninRequest {
 export interface AuthResponse {
   access_token: string;
   token_type: string;
+  requires_2fa?: boolean;
+  method?: string;
+  temp_token?: string;
+  message?: string;
+  trusted_device_token?: string;
+  trusted_device_expires?: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -65,6 +71,19 @@ export class AuthService {
       if (userJson) {
         this.currentUserSubject.next(JSON.parse(userJson));
       }
+      
+      // Check for token in URL (from Google OAuth)
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (token) {
+        // Store the token and decode user
+        localStorage.setItem('access_token', token);
+        const user = this.decodeToken(token);
+        this.currentUserSubject.next(user);
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     }
   }
 
@@ -88,7 +107,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/signup`, userData, {
       headers: headers
     }).pipe(
-      tap(response => {
+      tap((response: AuthResponse) => {
         this.handleAuthResponse(response);
       })
     );
@@ -99,10 +118,21 @@ export class AuthService {
     const uaResult = parser.getResult();
     const deviceInfo = `${uaResult.browser.name} on ${uaResult.os.name} ${uaResult.os.version}`;
     const headers = this.httpHeaders.set('X-Device-Info', deviceInfo);
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/signin`, credentials, {
-      headers: headers
-    }).pipe(
-      tap(response => {
+    
+    const requestOptions: any = {
+      headers: headers,
+      withCredentials: true // Include cookies in the request
+    };
+    
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/signin`, credentials, requestOptions).pipe(
+      map((event: any) => {
+        // Extract the response body from the HttpEvent
+        if (event.body) {
+          return event.body;
+        }
+        return event;
+      }),
+      tap((response: AuthResponse) => {
         this.handleAuthResponse(response);
       })
     );
@@ -117,9 +147,24 @@ export class AuthService {
   private handleAuthResponse(response: AuthResponse): void {
     if (this.isBrowser()) {
       if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem('access_token', response.access_token);
+        if (response.requires_2fa) {
+          // Store temporary token for 2FA verification
+          localStorage.setItem('temp_2fa_token', response.temp_token || '');
+          // Store 2FA method from response
+          if (response.method) {
+            localStorage.setItem('2fa_method', response.method);
+          }
+        } else {
+          localStorage.setItem('access_token', response.access_token);
+        }
       }
     }
+    
+    if (response.requires_2fa) {
+      // Don't set current user yet, wait for 2FA verification
+      return;
+    }
+    
     const user = this.decodeToken(response.access_token);
     this.currentUserSubject.next(user);
   }
@@ -211,4 +256,75 @@ export class AuthService {
       })
     );
   }
+
+  // 2FA Methods
+  verify2FA(code: string, rememberDevice: boolean = false): Observable<AuthResponse> {
+    const tempToken = this.getTemp2FAToken();
+    if (!tempToken) return new Observable(observer => observer.error('No temporary 2FA token'));
+    
+    const requestBody = { code, remember_device: rememberDevice };
+    const headers = this.httpHeaders.set('Authorization', `Bearer ${tempToken}`);
+    
+    console.log('DEBUG: Sending 2FA verification request:');
+    console.log('DEBUG: URL:', `${this.apiUrl}/auth/verify-2fa`);
+    console.log('DEBUG: Headers:', headers);
+    console.log('DEBUG: Request body:', requestBody);
+    console.log('DEBUG: Temp token (first 20 chars):', tempToken.substring(0, 20) + '...');
+    
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/verify-2fa`, requestBody, { 
+      headers
+    }).pipe(
+      tap((response: AuthResponse) => {
+        console.log('DEBUG: 2FA verification successful:', response);
+        this.handleAuthResponse(response);
+        
+        // Handle trusted device token if provided
+        if (response.trusted_device_token) {
+          // Trusted device token is now set as HTTP-only cookie by the backend
+          console.log('DEBUG: Trusted device token received and set as cookie');
+        }
+        
+        // Clear temporary token
+        if (this.isBrowser() && typeof window !== 'undefined' && window.localStorage) {
+          localStorage.removeItem('temp_2fa_token');
+        }
+      }),
+      catchError(error => {
+        console.error('DEBUG: 2FA verification error:', error);
+        console.error('DEBUG: Error status:', error.status);
+        console.error('DEBUG: Error message:', error.message);
+        console.error('DEBUG: Error response:', error.error);
+        throw error;
+      })
+    );
+  }
+
+  sendSMSCode(): Observable<any> {
+    const tempToken = this.getTemp2FAToken();
+    if (!tempToken) return new Observable(observer => observer.error('No temporary 2FA token'));
+    
+    const headers = this.httpHeaders.set('Authorization', `Bearer ${tempToken}`);
+    return this.http.post<any>(`${this.apiUrl}/auth/send-sms-code`, {}, { headers });
+  }
+
+  sendEmailCode(): Observable<any> {
+    const tempToken = this.getTemp2FAToken();
+    if (!tempToken) return new Observable(observer => observer.error('No temporary 2FA token'));
+    
+    const headers = this.httpHeaders.set('Authorization', `Bearer ${tempToken}`);
+    return this.http.post<any>(`${this.apiUrl}/auth/send-email-code`, {}, { headers });
+  }
+
+  private getTemp2FAToken(): string | null {
+    if (this.isBrowser() && typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('temp_2fa_token');
+    }
+    return null;
+  }
+
+  is2FARequired(): boolean {
+    return !!this.getTemp2FAToken();
+  }
+
+
 }

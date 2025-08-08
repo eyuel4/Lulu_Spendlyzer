@@ -45,6 +45,10 @@ class User(BaseModel):
     )
     feature_requests = relationship("FeatureRequest", back_populates="user", cascade="all, delete-orphan")
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
+    trusted_devices = relationship("TrustedDevice", back_populates="user", cascade="all, delete-orphan")
+    two_factor_auth = relationship("TwoFactorAuth", back_populates="user", uselist=False, cascade="all,delete-orphan")
+    notification_settings = relationship("NotificationSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    privacy_settings = relationship("PrivacySettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
 class UserPreferences(BaseModel):
     __tablename__ = "user_preferences"

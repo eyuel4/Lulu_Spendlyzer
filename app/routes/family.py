@@ -7,9 +7,10 @@ from app.models.user import User as UserModel
 from app.schemas.invitation import InvitationRead
 from app.schemas.user import UserRead
 from app.models.family_group import FamilyGroup
-from app.core.auth import hash_password  # type: ignore
+from app.core.auth import hash_password, get_current_user_id  # type: ignore
 from datetime import datetime, timezone, timedelta
 import secrets
+from typing import List
 
 router = APIRouter(prefix="/family", tags=["family"])
 
@@ -116,4 +117,31 @@ async def register_invitee(data: dict, db: AsyncSession = Depends(get_db)):
     invitation.status = "accepted"  # type: ignore
     await db.commit()
     await db.refresh(db_user)
-    return db_user 
+    return db_user
+
+# Family Members
+@router.get("/members", response_model=List[dict])
+async def get_family_members(current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    # For now, return empty list. In a real app, you'd query family members based on family_group_id
+    return []
+
+# Family Invitations
+@router.get("/invitations", response_model=List[dict])
+async def get_family_invitations(current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    # For now, return empty list. In a real app, you'd query invitations based on family_group_id
+    return []
+
+@router.post("/invitations")
+async def send_family_invitation(invitation_data: dict, current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    # For now, just return success. In a real app, you'd create an invitation record
+    return {"message": "Invitation sent successfully"}
+
+@router.post("/invitations/{invitation_id}/resend")
+async def resend_family_invitation(invitation_id: int, current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    # For now, just return success. In a real app, you'd resend the invitation
+    return {"message": "Invitation resent successfully"}
+
+@router.delete("/invitations/{invitation_id}")
+async def cancel_family_invitation(invitation_id: int, current_user_id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    # For now, just return success. In a real app, you'd cancel the invitation
+    return {"message": "Invitation cancelled successfully"} 

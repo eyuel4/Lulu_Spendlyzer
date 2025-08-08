@@ -12,7 +12,8 @@ A comprehensive collection of reusable prompts for building SAAS applications wi
 6. [Header Component with User Menu](#header-component-with-user-menu)
 7. [Notification System](#notification-system)
 8. [Database and Email Setup](#database-and-email-setup)
-
+9. [2FA Authentication and Trusted Device Management](#2FA-Trusted-Device)
+10. [User Settings Management System](#user-settings-management-system)
 ---
 
 ## FastAPI Authentication Backend Foundation
@@ -399,5 +400,179 @@ emails
 - Use proper security practices (JWT, password hashing, etc.)
 
 ---
+
+## 2FA Authentication and Trusted Device management
+
+Feature Implementation Prompt: Enhanced Trusted Device Management for Financial App
+Context:
+Implement a comprehensive "Remember Device" system for a personal finance application that handles sensitive financial data, bank connections, and transaction uploads. The system must balance security with user convenience while meeting financial industry security standards.
+Requirements:
+1. Database Schema & Models
+Create TrustedDevice model with fields: id, user_id, device_hash, token_hash, created_at, expires_at, last_used_at, user_agent, ip_address, location, is_active
+Add trusted_device_id field to UserSession model for tracking
+Implement automatic cleanup of expired trusted device records
+2. Backend API Endpoints
+POST /auth/trust-device - Create trusted device token after successful 2FA
+DELETE /auth/trust-device/{device_id} - Revoke specific trusted device
+GET /auth/trusted-devices - List user's trusted devices
+POST /auth/verify-trusted-device - Validate trusted device token
+Modify existing login endpoints to check for valid trusted devices
+3. Device Fingerprinting
+Implement device fingerprinting using: browser, OS, screen resolution, timezone, language, plugins
+Create unique device hash from fingerprint data
+Validate device fingerprint on each request with trusted token
+Store fingerprint data securely (hashed)
+4. Security Features
+Generate cryptographically secure random tokens (32+ characters)
+Hash tokens before database storage
+Implement 7-day expiration for trusted devices
+Add geographic restrictions (block new countries/regions)
+Implement IP change monitoring and alerts
+Add rate limiting for trusted device operations
+5. Risk-Based Authentication
+Skip 2FA for: same device + same location + recent activity (< 24 hours)
+Require 2FA for: new device, new location, unusual transaction patterns
+Enhanced verification for: bank account connections, large transactions, account changes
+Implement suspicious activity detection
+6. Frontend Components
+Add "Remember this device" checkbox on 2FA verification screen
+Create trusted devices management page in account settings
+Display device list with: device name, location, last used, actions (revoke)
+Add security notifications for suspicious activity
+7. Audit & Monitoring
+Log all trusted device operations (create, use, revoke)
+Track device usage patterns and locations
+Implement fraud detection for unusual patterns
+Add admin dashboard for security monitoring
+8. User Experience
+Clear messaging about security implications
+Graceful handling of expired/invalid trusted devices
+Emergency access recovery options
+Security education tooltips and help content
+9. Compliance & Best Practices
+Ensure compliance with financial data protection regulations
+Implement comprehensive audit trails
+Add data encryption for sensitive device information
+Provide user controls for privacy and security preferences
+10. Testing & Validation
+Unit tests for all trusted device operations
+Integration tests for device fingerprinting
+Security testing for token generation and validation
+Performance testing for device validation overhead
+Technical Specifications:
+Use secure HTTP-only cookies for trusted device tokens
+Implement proper CSRF protection
+Add comprehensive error handling and logging
+Ensure mobile responsiveness for device management UI
+Follow OWASP security guidelines for implementation
+Success Criteria:
+Users can opt to remember devices for 7 days
+System maintains security while reducing 2FA friction
+Comprehensive audit trail of all device activities
+Users can manage and revoke trusted devices
+System detects and responds to suspicious activity
+Performance impact is minimal (< 100ms additional latency)
+TODO List:
+✅ Create TrustedDevice database model and migration
+✅ Implement device fingerprinting utility
+✅ Create trusted device API endpoints
+✅ Add trusted device validation middleware
+✅ Modify login flow to check trusted devices
+✅ Implement frontend trusted device management UI
+✅ Add "Remember Device" option to 2FA screen
+✅ Implement geographic restrictions and monitoring
+✅ Add audit logging for all trusted device operations
+✅ Create security monitoring dashboard
+✅ Implement fraud detection algorithms
+✅ Add comprehensive testing suite
+✅ Update documentation and user guides
+✅ Performance optimization and security hardening
+✅ Compliance validation and final security audit
+
+---
+
+## User Settings Management System
+
+### Feature Implementation Prompt: Comprehensive User Settings Management
+Context:
+Implement a complete user settings management system for a personal finance application that allows users to manage their notification preferences, privacy settings, and account configurations. The system should provide granular control over user preferences while maintaining security and audit trails.
+
+Requirements:
+1. Database Schema & Models
+Create NotificationSettings model with fields: id, user_id, email_notifications, push_notifications, transaction_alerts, budget_alerts, family_updates, marketing_emails, created_at, updated_at
+Create PrivacySettings model with fields: id, user_id, profile_visibility, data_sharing, analytics_sharing, allow_family_access, created_at, updated_at
+Add relationships to User model for both settings tables
+Implement unique constraints to ensure one settings record per user
+2. Backend API Endpoints
+GET /users/notification-settings - Return existing settings or create defaults
+PUT /users/notification-settings - Update notification preferences with partial updates
+GET /users/privacy-settings - Return existing settings or create defaults
+PUT /users/privacy-settings - Update privacy preferences with partial updates
+Implement proper authentication and authorization for all endpoints
+3. Data Validation & Schemas
+Create Pydantic schemas for request/response validation
+Implement partial update schemas (NotificationSettingsUpdate, PrivacySettingsUpdate)
+Add proper field validation and default values
+Ensure type safety with proper TypeScript interfaces
+4. Frontend Integration
+Update account settings service to include notification and privacy methods
+Implement proper error handling and loading states
+Add form validation and user feedback
+Ensure consistent UI/UX with existing components
+5. Security & Audit Features
+Log all settings changes with comprehensive audit trails
+Implement proper authentication checks
+Add rate limiting for settings updates
+Ensure data privacy and compliance
+6. Default Settings Management
+Provide sensible defaults for new users
+Allow users to reset to default settings
+Implement progressive disclosure for advanced options
+7. User Experience
+Implement real-time validation and feedback
+Add confirmation dialogs for sensitive changes
+Provide clear explanations for each setting
+Ensure mobile-responsive design
+8. Testing & Validation
+Unit tests for all settings operations
+Integration tests for API endpoints
+Frontend component testing
+End-to-end user flow testing
+
+Technical Specifications:
+Use async/await for all database operations
+Implement proper error handling with HTTP status codes
+Use Pydantic for data validation and serialization
+Follow RESTful API design principles
+Ensure proper CORS configuration
+Implement comprehensive logging and monitoring
+
+Success Criteria:
+Users can successfully save and retrieve notification preferences
+Users can successfully save and retrieve privacy settings
+All settings changes are properly logged and audited
+System provides sensible defaults for new users
+Frontend provides intuitive and responsive user interface
+API endpoints handle errors gracefully with proper status codes
+Settings are persisted correctly in the database
+Partial updates work correctly without affecting unchanged fields
+
+TODO List:
+✅ Create NotificationSettings database model
+✅ Create PrivacySettings database model
+✅ Add relationships to User model
+✅ Update database initialization script
+✅ Create Pydantic schemas for validation
+✅ Implement GET /users/notification-settings endpoint
+✅ Implement PUT /users/notification-settings endpoint
+✅ Implement GET /users/privacy-settings endpoint
+✅ Implement PUT /users/privacy-settings endpoint
+✅ Add proper authentication and authorization
+✅ Implement audit logging for all changes
+✅ Update frontend account settings service
+✅ Add proper error handling and validation
+✅ Test all endpoints and user flows
+✅ Ensure mobile responsiveness
+✅ Add comprehensive documentation
 
 *This framework provides a solid foundation for building SAAS applications with modern authentication, user management, and UI/UX patterns.* 

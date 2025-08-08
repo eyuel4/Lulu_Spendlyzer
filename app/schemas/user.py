@@ -3,38 +3,85 @@ from typing import Optional, List
 from datetime import datetime
 
 class UserBase(BaseModel):
-    username: str
     first_name: str
     last_name: str
+    username: str
     email: EmailStr
-    is_primary: bool = True
-    family_group_id: Optional[int] = None
-    is_active: bool = True
-    is_superuser: bool = False
-    is_verified: bool = False
-    auth_provider: str = 'local'
-    provider_id: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
     family_invitees: Optional[List[dict]] = None
 
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+
 class UserRead(UserBase):
     id: int
-    created_at: datetime
-    model_config = ConfigDict(from_attributes=True)
+    is_primary: bool
+    family_group_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    auth_provider: Optional[str] = None
 
-class UserUpdate(BaseModel):
-    username: str | None = None
-    first_name: str | None = None
-    last_name: str | None = None
-    email: EmailStr | None = None
-    password: str | None = None
+    model_config = ConfigDict(from_attributes=True)
 
 class UserResponse(UserBase):
     id: int
-    created_at: datetime
-    model_config = ConfigDict(from_attributes=True)
+    is_primary: bool
+    family_group_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class NotificationSettings(BaseModel):
+    emailNotifications: bool = True
+    pushNotifications: bool = True
+    transactionAlerts: bool = True
+    budgetAlerts: bool = True
+    familyUpdates: bool = True
+    marketingEmails: bool = False
+
+class NotificationSettingsCreate(BaseModel):
+    emailNotifications: bool = True
+    pushNotifications: bool = True
+    transactionAlerts: bool = True
+    budgetAlerts: bool = True
+    familyUpdates: bool = True
+    marketingEmails: bool = False
+
+class NotificationSettingsUpdate(BaseModel):
+    emailNotifications: Optional[bool] = None
+    pushNotifications: Optional[bool] = None
+    transactionAlerts: Optional[bool] = None
+    budgetAlerts: Optional[bool] = None
+    familyUpdates: Optional[bool] = None
+    marketingEmails: Optional[bool] = None
+
+class PrivacySettings(BaseModel):
+    profileVisibility: str = 'private'  # 'private' | 'family' | 'public'
+    dataSharing: bool = False
+    analyticsSharing: bool = True
+    allowFamilyAccess: bool = True
+
+class PrivacySettingsCreate(BaseModel):
+    profileVisibility: str = 'private'  # 'private' | 'family' | 'public'
+    dataSharing: bool = False
+    analyticsSharing: bool = True
+    allowFamilyAccess: bool = True
+
+class PrivacySettingsUpdate(BaseModel):
+    profileVisibility: Optional[str] = None  # 'private' | 'family' | 'public'
+    dataSharing: Optional[bool] = None
+    analyticsSharing: Optional[bool] = None
+    allowFamilyAccess: Optional[bool] = None
+
+class AccountType(BaseModel):
+    type: str = 'personal'  # 'personal' | 'family'
+    familyGroupId: Optional[int] = None
 
 class UserAuth(BaseModel):
     login: str  # username or email

@@ -123,6 +123,14 @@
         <!-- Email Change -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
           <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Email Address</h3>
+          <div *ngIf="isSocialLogin" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+            <p class="text-sm text-blue-700 dark:text-blue-300">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              You signed in with Google. Email changes must be made through your Google account.
+            </p>
+          </div>
           <form [formGroup]="emailChangeForm" (ngSubmit)="updateEmail()" class="space-y-4">
             <div>
               <label for="newEmail" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -132,7 +140,8 @@
                 type="email" 
                 id="newEmail"
                 formControlName="newEmail"
-                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors duration-200"
+                [disabled]="isSocialLogin"
+                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 placeholder="Enter your new email address"
               >
             </div>
@@ -145,7 +154,8 @@
                 type="email" 
                 id="confirmEmail"
                 formControlName="confirmEmail"
-                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent transition-colors duration-200"
+                [disabled]="isSocialLogin"
+                class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 placeholder="Confirm your new email address"
               >
               <p *ngIf="emailChangeForm.errors?.['emailMismatch']" class="text-xs text-red-600 dark:text-red-400 mt-1">
@@ -155,7 +165,7 @@
             
             <button 
               type="submit"
-              [disabled]="!emailChangeForm.valid"
+              [disabled]="!emailChangeForm.valid || isSocialLogin"
               class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               Update Email
@@ -189,19 +199,19 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="text-sm font-medium text-slate-900 dark:text-white">{{ session.device_info || session.user_agent || 'Unknown Device' }}</p>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">IP: {{ session.ip_address || 'N/A' }} • Last Active: {{ session.last_active_at | date:'short' }}</p>
+                  <p class="text-sm font-medium text-slate-900 dark:text-white">{{ session.device || 'Unknown Device' }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">IP: {{ session.ipAddress || 'N/A' }} • Last Active: {{ session.lastActive | date:'short' }}</p>
                 </div>
               </div>
               <div class="flex items-center space-x-2">
                 <span 
-                  *ngIf="session.is_current"
+                  *ngIf="session.isCurrent"
                   class="px-2 py-1 text-xs font-medium text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20 rounded-full border border-green-200 dark:border-green-700"
                 >
                   Current
                 </span>
                 <button 
-                  *ngIf="!session.is_current"
+                  *ngIf="!session.isCurrent"
                   (click)="logoutFromSession(session)"
                   class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
                 >
@@ -221,16 +231,28 @@
         <!-- Password Reset -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
           <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Password</h3>
+          <div *ngIf="isSocialLogin" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+            <p class="text-sm text-blue-700 dark:text-blue-300">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              You signed in with Google. Password management is handled through your Google account.
+            </p>
+          </div>
           <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
-            Reset your password by sending a secure link to your email address.
+            {{ isSocialLogin ? 'Manage your password through your Google account settings.' : 'Reset your password by sending a secure link to your email address.' }}
           </p>
           <button 
             (click)="resetPassword()"
-            class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+            [disabled]="isSocialLogin"
+            class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             Reset Password
           </button>
         </div>
+
+        <!-- Trusted Devices -->
+        <app-trusted-devices></app-trusted-devices>
       </div>
 
       <!-- Notification Settings -->
@@ -614,7 +636,9 @@
         
         <div class="space-y-3">
           <button 
-            (click)="enableTwoFactor('authenticator')"
+            (click)="select2FAMethod('authenticator')"
+            [class.border-indigo-500]="selected2FAMethod === 'authenticator'"
+            [class.bg-indigo-50]="selected2FAMethod === 'authenticator'"
             class="w-full flex items-center justify-between p-3 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
           >
             <div class="flex items-center space-x-3">
@@ -626,13 +650,18 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400">Google Authenticator, Authy, etc.</p>
               </div>
             </div>
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg *ngIf="selected2FAMethod === 'authenticator'" class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <svg *ngIf="selected2FAMethod !== 'authenticator'" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </button>
           
           <button 
-            (click)="enableTwoFactor('sms')"
+            (click)="select2FAMethod('sms')"
+            [class.border-indigo-500]="selected2FAMethod === 'sms'"
+            [class.bg-indigo-50]="selected2FAMethod === 'sms'"
             class="w-full flex items-center justify-between p-3 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
           >
             <div class="flex items-center space-x-3">
@@ -644,13 +673,18 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400">Text message to your phone</p>
               </div>
             </div>
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg *ngIf="selected2FAMethod === 'sms'" class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <svg *ngIf="selected2FAMethod !== 'sms'" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </button>
           
           <button 
-            (click)="enableTwoFactor('email')"
+            (click)="select2FAMethod('email')"
+            [class.border-indigo-500]="selected2FAMethod === 'email'"
+            [class.bg-indigo-50]="selected2FAMethod === 'email'"
             class="w-full flex items-center justify-between p-3 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-200"
           >
             <div class="flex items-center space-x-3">
@@ -662,19 +696,43 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400">Email to your registered address</p>
               </div>
             </div>
-            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg *ngIf="selected2FAMethod === 'email'" class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <svg *ngIf="selected2FAMethod !== 'email'" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </button>
+        </div>
+
+        <!-- Phone number input for SMS -->
+        <div *ngIf="selected2FAMethod === 'sms'" class="space-y-2">
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            [(ngModel)]="phoneNumber"
+            placeholder="+1 (555) 123-4567"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+          >
         </div>
         
         <div class="flex space-x-3 pt-4">
           <button 
             type="button"
-            (click)="showTwoFactorModal = false"
+            (click)="cancel2FASetup()"
             class="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
           >
             Cancel
+          </button>
+          <button 
+            type="button"
+            (click)="enableSelected2FA()"
+            [disabled]="!selected2FAMethod || (selected2FAMethod === 'sms' && !phoneNumber)"
+            class="flex-1 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Enable 2FA
           </button>
         </div>
       </div>
@@ -703,19 +761,19 @@
               </svg>
             </div>
             <div>
-              <p class="text-sm font-medium text-slate-900 dark:text-white">{{ session.device_info || session.user_agent || 'Unknown Device' }}</p>
-              <p class="text-xs text-slate-500 dark:text-slate-400">{{ session.ip_address || 'N/A' }} • Last Active: {{ session.last_active_at | date:'short' }}</p>
+              <p class="text-sm font-medium text-slate-900 dark:text-white">{{ session.device || 'Unknown Device' }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400">{{ session.ipAddress || 'N/A' }} • Last Active: {{ session.lastActive | date:'short' }}</p>
             </div>
           </div>
           <div class="flex items-center space-x-2">
             <span 
-              *ngIf="session.is_current"
+              *ngIf="session.isCurrent"
               class="px-2 py-1 text-xs font-medium text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20 rounded-full"
             >
               Current
             </span>
             <button 
-              *ngIf="!session.is_current"
+              *ngIf="!session.isCurrent"
               (click)="logoutFromSession(session)"
               class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors duration-200"
             >
@@ -738,6 +796,151 @@
         >
           Close
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2FA Verification Modal -->
+  <div *ngIf="showVerificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-sm sm:max-w-md mx-4 p-4 sm:p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Verify {{ pending2FAMethod === 'sms' ? 'Phone Number' : 'Email' }}</h3>
+        <button 
+          (click)="closeVerificationModal()"
+          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="space-y-4">
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          We've sent a verification code to your {{ pending2FAMethod === 'sms' ? 'phone' : 'email' }}. 
+          Please enter the code below to verify your {{ pending2FAMethod === 'sms' ? 'phone number' : 'email address' }}.
+        </p>
+        
+        <div>
+          <label for="verificationCode" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Verification Code
+          </label>
+          <input
+            id="verificationCode"
+            type="text"
+            [(ngModel)]="verificationCode"
+            placeholder="Enter 6-digit code"
+            maxlength="6"
+            class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
+          >
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button
+            (click)="verifyAndEnable2FA()"
+            [disabled]="!verificationCode || isVerifying"
+            class="flex-1 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            <span *ngIf="isVerifying" class="flex items-center justify-center">
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Verifying...
+            </span>
+            <span *ngIf="!isVerifying">Verify & Enable</span>
+          </button>
+          
+          <button
+            (click)="resendVerificationCode()"
+            [disabled]="isVerifying"
+            class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          >
+            Resend
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div *ngIf="showQRCodeModalFlag && qrCodeData" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-sm sm:max-w-md mx-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Setup Authenticator App</h3>
+        <button 
+          (click)="closeQRCodeModal()"
+          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="space-y-4 sm:space-y-6">
+        <!-- QR Code Section -->
+        <div class="text-center">
+          <p class="text-sm text-slate-600 dark:text-slate-400 mb-3">
+            Scan this QR code with your authenticator app
+          </p>
+          <div class="flex justify-center">
+            <img [src]="qrCodeData.qrCodeUrl" alt="QR Code" class="w-48 h-48 sm:w-56 sm:h-56 border border-slate-300 dark:border-slate-600 rounded-lg">
+          </div>
+        </div>
+        
+        <!-- Manual Entry Key Section -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Manual Entry Key
+          </label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              [value]="qrCodeData.secretKey"
+              readonly
+              class="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white text-xs sm:text-sm font-mono"
+            >
+            <button
+              (click)="copyToClipboard(qrCodeData.secretKey)"
+              class="px-3 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors duration-200 text-sm whitespace-nowrap"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+        
+        <!-- Backup Codes Section -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Backup Codes
+          </label>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            Save these codes securely. Use them if you lose your authenticator device.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div *ngFor="let code of qrCodeData.backupCodes" class="p-2 bg-slate-100 dark:bg-slate-700 rounded text-xs sm:text-sm font-mono text-center break-all">
+              {{ code }}
+            </div>
+          </div>
+          <button
+            (click)="downloadBackupCodes()"
+            class="mt-3 w-full px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200 text-sm"
+          >
+            Download Backup Codes
+          </button>
+        </div>
+        
+        <!-- Done Button -->
+        <div class="pt-2">
+          <button 
+            type="button"
+            (click)="closeQRCodeModal()"
+            class="w-full px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-slate-800 transition-colors duration-200"
+          >
+            Done
+          </button>
+        </div>
       </div>
     </div>
   </div>

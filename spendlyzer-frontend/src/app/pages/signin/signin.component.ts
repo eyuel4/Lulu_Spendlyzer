@@ -48,11 +48,21 @@ export class SigninComponent implements OnInit {
       this.authService.signin(credentials).subscribe({
         next: (response) => {
           this.loading = false;
-          this.successMessage = 'Sign in successful! Redirecting to dashboard...';
-          // Check user preferences before navigating
-          setTimeout(() => {
-            this.checkUserPreferences();
-          }, 1500);
+          
+          if (response.requires_2fa) {
+            // Store 2FA method for the verification page
+            if (typeof window !== 'undefined' && window.localStorage) {
+              localStorage.setItem('2fa_method', response.method || 'authenticator');
+            }
+            // Navigate to 2FA verification page
+            this.router.navigate(['/two-factor-verification']);
+          } else {
+            this.successMessage = 'Sign in successful! Redirecting to dashboard...';
+            // Check user preferences before navigating
+            setTimeout(() => {
+              this.checkUserPreferences();
+            }, 1500);
+          }
         },
         error: (error) => {
           this.loading = false;

@@ -10,7 +10,7 @@ import os
 from datetime import datetime
 from typing import List
 
-router = APIRouter(prefix="/users/sessions", tags=["sessions"])
+router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 SECRET_KEY = os.getenv("JWT_SECRET")
 ALGORITHM = "HS256"
@@ -33,14 +33,37 @@ def get_user_and_jti(request: Request):
 @router.get("/", response_model=List[UserSessionResponse])
 async def list_sessions(request: Request, db: AsyncSession = Depends(get_db)):
     user_id, jti = get_user_and_jti(request)
-    # Refresh last_active_at for current session
-    result = await db.execute(select(UserSession).where(UserSession.user_id == user_id, UserSession.token_jti == jti))
-    current_session = result.scalars().first()
-    if current_session:
-        setattr(current_session, 'last_active_at', datetime.utcnow())
-        await db.commit()
+    
+    # Get all sessions for the user
     result = await db.execute(select(UserSession).where(UserSession.user_id == user_id))
-    return result.scalars().all()
+    sessions = result.scalars().all()
+    
+    # Create response objects to avoid greenlet issues
+    response_sessions = []
+    for session in sessions:
+        # Update last_active_at for current session and mark is_current
+        if session.token_jti == jti:
+            session.last_active_at = datetime.utcnow()
+            session.is_current = True
+        else:
+            session.is_current = False
+        
+        # Create response object with all required fields
+        response_session = UserSessionResponse(
+            id=session.id,
+            user_id=session.user_id,
+            token_jti=session.token_jti,
+            device_info=session.device_info,
+            ip_address=session.ip_address,
+            user_agent=session.user_agent,
+            is_current=session.is_current,
+            created_at=session.created_at,
+            last_active_at=session.last_active_at
+        )
+        response_sessions.append(response_session)
+    
+    await db.commit()
+    return response_sessions
 
 @router.delete("/{session_id}")
 async def revoke_session(session_id: int, request: Request, db: AsyncSession = Depends(get_db)):
@@ -49,18 +72,25 @@ async def revoke_session(session_id: int, request: Request, db: AsyncSession = D
     session = result.scalars().first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Check if trying to delete current session
+    is_current_session = session.token_jti == jti
+    
     await db.delete(session)
     await db.commit()
-    return {"message": "Session revoked"}
+    
+    if is_current_session:
+        return {"message": "Current session revoked", "logout_required": True}
+    else:
+        return {"message": "Session revoked"}
 
 @router.delete("/")
 async def revoke_all_sessions(request: Request, db: AsyncSession = Depends(get_db)):
     user_id, jti = get_user_and_jti(request)
-    # Keep current session (by jti), delete all others
+    # Delete ALL sessions for the user (including current session)
     result = await db.execute(select(UserSession).where(UserSession.user_id == user_id))
     sessions = result.scalars().all()
     for session in sessions:
-        if session.token_jti != jti:
-            await db.delete(session)
+        await db.delete(session)
     await db.commit()
-    return {"message": "All other sessions revoked"} 
+    return {"message": "All sessions revoked", "logout_required": True} 

@@ -29,6 +29,9 @@ from app.models.report import Report
 from app.models.grocery_category import GroceryCategory
 from app.models.shopping_category import ShoppingCategory
 from app.models.system_log import SystemLog, AuditLog
+from app.models.user_session import UserSession
+from app.models.invitation import Invitation
+from app.models.two_factor_auth import TwoFactorAuth, TwoFactorBackupCode
 
 DATABASE_URL = os.getenv("DB_URL")
 if not DATABASE_URL:

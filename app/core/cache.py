@@ -17,9 +17,13 @@ class RedisCache:
         self.port = port
         self.db = db
         self._redis = None
+        self._connection_failed = False
 
     async def get_redis(self) -> redis.Redis:
         """Get Redis connection"""
+        if self._connection_failed:
+            raise ConnectionError("Redis connection previously failed")
+            
         if self._redis is None:
             try:
                 self._redis = redis.Redis(
@@ -35,6 +39,7 @@ class RedisCache:
                 logger.info(f"Connected to Redis at {self.host}:{self.port}")
             except Exception as e:
                 logger.error(f"Failed to connect to Redis: {e}")
+                self._connection_failed = True
                 raise
         return self._redis
 

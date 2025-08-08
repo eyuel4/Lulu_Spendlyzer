@@ -1,16 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService, Theme } from '../../services/theme.service';
 import { AccountSettingsService, FamilyMember, Invitation, InvitationRequest, Session, TwoFactorSettings } from '../../services/account-settings.service';
 import { NotificationService } from '../../services/notification.service';
+import { TrustedDevicesComponent } from './trusted-devices.component';
 
 @Component({
   selector: 'app-account-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TrustedDevicesComponent],
   templateUrl: './account-settings.component.html',
   styleUrls: ['./account-settings.component.scss']
 })
@@ -18,6 +19,10 @@ export class AccountSettingsComponent implements OnInit {
   currentTheme: Theme = 'light';
   loading = true;
   activeTab = 'security';
+  
+  // User authentication info
+  isSocialLogin = false;
+  currentUser: any = null;
   
   // Form groups
   emailChangeForm: FormGroup;
@@ -36,40 +41,18 @@ export class AccountSettingsComponent implements OnInit {
   twoFactorSettings: TwoFactorSettings | null = null;
   showTwoFactorModal = false;
   showSessionModal = false;
+  showQRCodeModalFlag = false;
+  qrCodeData: { qrCodeUrl: string; secretKey: string; backupCodes: string[] } | null = null;
+  selected2FAMethod: 'authenticator' | 'sms' | 'email' | null = null;
+  phoneNumber = '';
   
-  // Mock data for demonstration
-  mockFamilyMembers: FamilyMember[] = [
-    {
-      id: 1,
-      first_name: 'John',
-      last_name: 'Doe',
-      email: 'john.doe@example.com',
-      role: 'Member',
-      status: 'active',
-      joined_at: '2024-01-15'
-    },
-    {
-      id: 2,
-      first_name: 'Jane',
-      last_name: 'Smith',
-      email: 'jane.smith@example.com',
-      role: 'Member',
-      status: 'pending'
-    }
-  ];
-  
-  mockInvitations: Invitation[] = [
-    {
-      id: 1,
-      email: 'partner@example.com',
-      first_name: 'Partner',
-      last_name: 'Name',
-      role: 'Member',
-      status: 'pending',
-      sent_at: '2024-01-20T10:00:00Z',
-      expires_at: '2024-01-27T10:00:00Z'
-    }
-  ];
+  // 2FA verification flow properties
+  showVerificationModal = false;
+  verificationCode = '';
+  isVerifying = false;
+  pending2FAMethod: 'sms' | 'email' | null = null;
+  pendingPhoneNumber = '';
+
 
   constructor(
     private fb: FormBuilder,
@@ -117,6 +100,9 @@ export class AccountSettingsComponent implements OnInit {
   private loadUserData(): void {
     this.authService.fetchCurrentUser().subscribe({
       next: (user) => {
+        this.currentUser = user;
+        // Check if user is social login (Google)
+        this.isSocialLogin = user.auth_provider === 'google';
         // Determine account type based on user data
         this.accountType = user.family_group_id ? 'family' : 'personal';
         this.loading = false;
@@ -136,8 +122,7 @@ export class AccountSettingsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading family members:', error);
-        // Fallback to mock data for development
-        this.familyMembers = this.mockFamilyMembers;
+        this.familyMembers = [];
       }
     });
 
@@ -147,8 +132,7 @@ export class AccountSettingsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading invitations:', error);
-        // Fallback to mock data for development
-        this.invitations = this.mockInvitations;
+        this.invitations = [];
       }
     });
   }
@@ -260,28 +244,51 @@ export class AccountSettingsComponent implements OnInit {
 
   // Session Management
   loadActiveSessions(): void {
+    console.log('Loading active sessions...');
+    console.log('Current user:', this.currentUser);
+    console.log('Is authenticated:', this.authService.isAuthenticated());
+    
     this.accountSettingsService.getActiveSessions().subscribe({
       next: (sessions) => {
-        this.activeSessions = sessions;
+        console.log('Received sessions in component:', sessions);
+        this.activeSessions = sessions || [];
+        if (this.activeSessions.length === 0) {
+          console.log('No active sessions found');
+        }
       },
       error: (error) => {
         console.error('Error loading sessions:', error);
-        // Do not load mock data; show empty or error state only
         this.activeSessions = [];
       }
     });
   }
 
   logoutFromSession(session: Session): void {
-    this.accountSettingsService.logoutFromSession(session.id).subscribe({
-      next: () => {
-        this.notificationService.addNotification({
-          title: 'Session Logged Out',
-          message: `Successfully logged out from ${session.device_info || session.user_agent || 'Unknown Device'}.`,
-          type: 'success',
-          isRead: false
-        });
-        this.loadActiveSessions();
+    console.log('Logging out session:', session);
+    this.accountSettingsService.logoutFromSession(session.id.toString()).subscribe({
+      next: (response) => {
+        console.log('Logout response:', response);
+        
+        // Check if this was the current session
+        if (session.isCurrent) {
+          this.notificationService.addNotification({
+            title: 'Current Session Logged Out',
+            message: 'You have been logged out from this device. Redirecting to login.',
+            type: 'info',
+            isRead: false
+          });
+          // Clear local storage and redirect to login
+          this.authService.logout();
+          this.router.navigate(['/signin']);
+        } else {
+          this.notificationService.addNotification({
+            title: 'Session Logged Out',
+            message: `Successfully logged out from ${session.device || 'Unknown Device'}.`,
+            type: 'success',
+            isRead: false
+          });
+          this.loadActiveSessions();
+        }
       },
       error: (error) => {
         console.error('Error logging out from session:', error);
@@ -291,15 +298,20 @@ export class AccountSettingsComponent implements OnInit {
   }
 
   logoutFromAllSessions(): void {
+    console.log('Logging out from all sessions');
     this.accountSettingsService.logoutFromAllSessions().subscribe({
-      next: () => {
+      next: (response) => {
+        console.log('Logout all response:', response);
         this.notificationService.addNotification({
           title: 'All Sessions Logged Out',
-          message: 'Successfully logged out from all devices.',
+          message: 'Successfully logged out from all devices. You will be redirected to login.',
           type: 'success',
           isRead: false
         });
-        this.loadActiveSessions();
+        
+        // Clear local storage and redirect to login
+        this.authService.logout();
+        this.router.navigate(['/signin']);
       },
       error: (error) => {
         console.error('Error logging out from all sessions:', error);
@@ -316,21 +328,43 @@ export class AccountSettingsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading 2FA settings:', error);
-        // Load mock data for development
-        this.twoFactorSettings = this.getMockTwoFactorSettings();
+        this.twoFactorSettings = null;
       }
     });
   }
 
   enableTwoFactor(method: 'sms' | 'email' | 'authenticator', phoneNumber?: string): void {
     this.accountSettingsService.enableTwoFactor(method, phoneNumber).subscribe({
-      next: () => {
+      next: (response) => {
         this.notificationService.addNotification({
           title: 'Two-Factor Enabled',
           message: `Two-factor authentication has been enabled using ${method}.`,
           type: 'success',
           isRead: false
         });
+        
+        // Handle different 2FA methods
+        if (method === 'authenticator' && response.qr_code_url) {
+          // Show QR code modal
+          this.showQRCodeModal(response.qr_code_url, response.secret_key, response.backup_codes);
+        } else if (method === 'sms') {
+          // Show SMS setup confirmation
+          this.notificationService.addNotification({
+            title: 'SMS 2FA Setup',
+            message: `SMS 2FA has been enabled for ${phoneNumber}. You will receive a verification code when logging in.`,
+            type: 'info',
+            isRead: false
+          });
+        } else if (method === 'email') {
+          // Show email setup confirmation
+          this.notificationService.addNotification({
+            title: 'Email 2FA Setup',
+            message: 'Email 2FA has been enabled. You will receive a verification code when logging in.',
+            type: 'info',
+            isRead: false
+          });
+        }
+        
         this.loadTwoFactorSettings();
         this.showTwoFactorModal = false;
       },
@@ -339,6 +373,176 @@ export class AccountSettingsComponent implements OnInit {
         this.notificationService.logSystemError('2FA Setup Failed', 'Failed to enable two-factor authentication', error);
       }
     });
+  }
+
+  showQRCodeModal(qrCodeUrl: string, secretKey: string, backupCodes: string[]): void {
+    // Store QR code data for modal display
+    this.qrCodeData = {
+      qrCodeUrl,
+      secretKey,
+      backupCodes
+    };
+    this.showQRCodeModalFlag = true;
+  }
+
+  closeQRCodeModal(): void {
+    this.showQRCodeModalFlag = false;
+    this.qrCodeData = null;
+  }
+
+  copyToClipboard(text: string): void {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.notificationService.addNotification({
+          title: 'Copied!',
+          message: 'Secret key copied to clipboard.',
+          type: 'success',
+          isRead: false
+        });
+      });
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      this.notificationService.addNotification({
+        title: 'Copied!',
+        message: 'Secret key copied to clipboard.',
+        type: 'success',
+        isRead: false
+      });
+    }
+  }
+
+  downloadBackupCodes(): void {
+    if (!this.qrCodeData?.backupCodes) return;
+
+    const content = `Spendlyzer Backup Codes\n\n` +
+      `Generated on: ${new Date().toLocaleDateString()}\n\n` +
+      `IMPORTANT: Keep these codes in a secure location. You can use them to access your account if you lose your authenticator device.\n\n` +
+      `Backup Codes:\n` +
+      this.qrCodeData.backupCodes.map((code, index) => `${index + 1}. ${code}`).join('\n') +
+      `\n\nNote: Each code can only be used once.`;
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'spendlyzer-backup-codes.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    this.notificationService.addNotification({
+      title: 'Downloaded!',
+      message: 'Backup codes have been downloaded.',
+      type: 'success',
+      isRead: false
+    });
+  }
+
+  select2FAMethod(method: 'authenticator' | 'sms' | 'email'): void {
+    this.selected2FAMethod = method;
+  }
+
+  enableSelected2FA(): void {
+    if (!this.selected2FAMethod) return;
+
+    if (this.selected2FAMethod === 'sms' && !this.phoneNumber) {
+      this.notificationService.addNotification({
+        title: 'Phone Number Required',
+        message: 'Please enter your phone number for SMS 2FA.',
+        type: 'error',
+        isRead: false
+      });
+      return;
+    }
+
+    // For SMS and Email, we need to verify first
+    if (this.selected2FAMethod === 'sms' || this.selected2FAMethod === 'email') {
+      this.pending2FAMethod = this.selected2FAMethod;
+      this.pendingPhoneNumber = this.phoneNumber;
+      this.sendVerificationCode();
+    } else {
+      // For authenticator, enable directly
+      this.enableTwoFactor(this.selected2FAMethod, this.phoneNumber || undefined);
+    }
+  }
+
+  sendVerificationCode(): void {
+    if (!this.pending2FAMethod) return;
+
+    this.accountSettingsService.sendSetupVerificationCode(
+      this.pending2FAMethod,
+      this.pending2FAMethod === 'sms' ? this.pendingPhoneNumber : undefined
+    ).subscribe({
+      next: (response) => {
+        this.showVerificationModal = true;
+        this.notificationService.addNotification({
+          title: 'Verification Code Sent',
+          message: `A verification code has been sent to your ${this.pending2FAMethod === 'sms' ? 'phone' : 'email'}.`,
+          type: 'success',
+          isRead: false
+        });
+      },
+      error: (error) => {
+        console.error('Error sending verification code:', error);
+        this.notificationService.addNotification({
+          title: 'Error',
+          message: 'Failed to send verification code. Please try again.',
+          type: 'error',
+          isRead: false
+        });
+      }
+    });
+  }
+
+  verifyAndEnable2FA(): void {
+    if (!this.verificationCode || !this.pending2FAMethod) return;
+
+    this.isVerifying = true;
+    
+    // First verify the code
+    this.accountSettingsService.verify2FACode(this.verificationCode).subscribe({
+      next: () => {
+        // If verification successful, enable 2FA
+        this.enableTwoFactor(this.pending2FAMethod!, this.pending2FAMethod === 'sms' ? this.pendingPhoneNumber : undefined);
+        this.closeVerificationModal();
+      },
+      error: (error) => {
+        this.isVerifying = false;
+        console.error('Verification failed:', error);
+        this.notificationService.addNotification({
+          title: 'Verification Failed',
+          message: 'Invalid verification code. Please try again.',
+          type: 'error',
+          isRead: false
+        });
+      }
+    });
+  }
+
+  closeVerificationModal(): void {
+    this.showVerificationModal = false;
+    this.verificationCode = '';
+    this.isVerifying = false;
+    this.pending2FAMethod = null;
+    this.pendingPhoneNumber = '';
+  }
+
+  resendVerificationCode(): void {
+    this.sendVerificationCode();
+  }
+
+  cancel2FASetup(): void {
+    this.selected2FAMethod = null;
+    this.phoneNumber = '';
+    this.showTwoFactorModal = false;
   }
 
   disableTwoFactor(): void {
@@ -539,11 +743,5 @@ export class AccountSettingsComponent implements OnInit {
   }
 
   // Mock data methods for development
-  getMockTwoFactorSettings(): TwoFactorSettings {
-    return {
-      enabled: false,
-      method: 'authenticator',
-      backupCodes: ['123456', '234567', '345678', '456789', '567890']
-    };
-  }
+
 } 

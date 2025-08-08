@@ -19,4 +19,8 @@ pytest
 fastapi-users[sqlalchemy]
 authlib
 itsdangerous 
-pyjwt 
+pyjwt
+pyotp
+qrcode[pil]
+twilio
+user-agents==2.2.0 

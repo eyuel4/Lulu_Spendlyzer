@@ -1,0 +1,53 @@
+// Two-Factor Verification Component Styles
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+}
+
+// Custom input styles
+input[type="text"] {
+  &::placeholder {
+    color: #6b7280;
+  }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+}
+
+// Dark mode adjustments
+.dark {
+  input[type="text"] {
+    &::placeholder {
+      color: #9ca3af;
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+  }
+}
+
+// Animation for loading states
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .max-w-md {
+    max-width: 100%;
+    margin: 0 1rem;
+  }
+} 

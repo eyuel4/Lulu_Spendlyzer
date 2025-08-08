@@ -39,6 +39,10 @@ from app.models import user, card, transaction, category_override, report, groce
 from app.models.family_group import FamilyGroup
 from app.models.invitation import Invitation
 from app.models.user_session import UserSession
+from app.models.trusted_device import TrustedDevice
+from app.models.two_factor_auth import TwoFactorAuth, TwoFactorBackupCode
+from app.models.notification_settings import NotificationSettings
+from app.models.privacy_settings import PrivacySettings
 # UserPreferences is imported via the user module
 
 if __name__ == "__main__":

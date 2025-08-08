@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from dotenv import load_dotenv
-from app.routes import user, card, transaction, category_override, report, grocery_category, shopping_category, auth, family, logs, billing, feature_request, user_session
+from app.routes import user, card, transaction, category_override, report, grocery_category, shopping_category, auth, family, logs, billing, feature_request, user_session, two_factor_auth, trusted_device
 from app.core.cache import get_cache
 
 # Set the full path to the .env file
@@ -16,8 +16,8 @@ app = FastAPI()
 # Configure CORS for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
-    allow_credentials=False,  # Set to False when using allow_origins=["*"]
+    allow_origins=["http://localhost:4200", "http://127.0.0.1:4200"],  # Frontend origins
+    allow_credentials=True,  # Allow credentials for cookies
     allow_methods=["*"],  # Allow all methods
     allow_headers=["*"],  # Allow all headers
 )
@@ -28,6 +28,9 @@ app.add_middleware(
     secret_key=os.getenv("JWT_SECRET", "your-secret-key-here")
 )
 
+app.include_router(user_session.router)  # Must be before user.router to avoid route conflicts
+app.include_router(two_factor_auth.router)  # Must be before user.router to avoid route conflicts
+app.include_router(trusted_device.router)  # Trusted device routes
 app.include_router(user.router)
 app.include_router(card.router)
 app.include_router(transaction.router)
@@ -40,7 +43,6 @@ app.include_router(family.router)
 app.include_router(logs.router)
 app.include_router(billing.router)
 app.include_router(feature_request.router)
-app.include_router(user_session.router)
 
 @app.get("/health")
 def health_check():
@@ -52,12 +54,15 @@ async def startup_event():
     try:
         # Initialize cache
         cache = get_cache()
-        # Test Redis connection
-        await cache.get_redis()
-        print("✅ Redis cache initialized successfully")
+        # Test Redis connection (but don't fail if it's not available)
+        try:
+            await cache.get_redis()
+            print("SUCCESS: Redis cache initialized successfully")
+        except Exception as redis_error:
+            print(f"WARNING: Redis connection failed: {redis_error}")
+            print("WARNING: App will continue without caching")
     except Exception as e:
-        print(f"⚠️  Redis connection failed: {e}")
-        print("⚠️  App will continue without caching")
+        print(f"ERROR: Cache initialization failed: {e}")
     
     try:
         # Initialize logging service

@@ -10,6 +10,10 @@ export const routes: Routes = [
   { path: '', redirectTo: '/signin', pathMatch: 'full' },
   { path: 'signup', component: SignupComponent },
   { path: 'signin', component: SigninComponent },
+  { 
+    path: 'two-factor-verification', 
+    loadComponent: () => import('./pages/two-factor-verification/two-factor-verification.component').then(m => m.TwoFactorVerificationComponent)
+  },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { 

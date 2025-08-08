@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request, Response
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_
 from app.core.database import get_db
 from app.core.cache import get_cache, CacheKeys, RedisCache
 from app.schemas.user import UserAuth, UserCreate, UserRead
@@ -27,6 +28,11 @@ from app.schemas.family_group import FamilyGroupSetupRequest
 from starlette.responses import RedirectResponse
 import uuid
 from app.models.user_session import UserSession
+from app.models.two_factor_auth import TwoFactorAuth
+from app.services.notification_service import notification_service
+from sqlalchemy import select
+import pyotp
+import hashlib
 
 SECRET_KEY = os.getenv("JWT_SECRET")
 if not SECRET_KEY:
@@ -73,6 +79,9 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+class TwoFactorVerificationRequest(BaseModel):
+    code: str
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -273,11 +282,244 @@ async def signup(user: UserCreate, request: Request, db: AsyncSession = Depends(
         return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/signin")
-def signin(auth: UserAuth, request: Request, db: Session = Depends(get_db)):
+async def signin(auth: UserAuth, request: Request, db: AsyncSession = Depends(get_db)):
     # Allow login with either username or email
-    user = db.query(UserModel).filter((UserModel.username == auth.login) | (UserModel.email == auth.login)).first()
+    result = await db.execute(
+        select(UserModel).where(
+            (UserModel.username == auth.login) | (UserModel.email == auth.login)
+        )
+    )
+    user = result.scalars().first()
+    
     if not user or not verify_password(auth.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    
+    # Check if 2FA is enabled
+    result = await db.execute(
+        select(TwoFactorAuth).where(
+            and_(TwoFactorAuth.user_id == user.id, TwoFactorAuth.is_enabled == True)
+        )
+    )
+    two_factor = result.scalars().first()
+    
+    # Check for trusted device token
+    trusted_device_token = request.cookies.get("trusted_device_token")
+    print(f"DEBUG: Signin - Trusted device token from cookies: {trusted_device_token}")
+    trusted_device = None
+    
+    if trusted_device_token and two_factor:
+        # Verify trusted device
+        from app.services.trusted_device_service import trusted_device_service
+        trusted_device = await trusted_device_service.verify_trusted_device(
+            db=db,
+            token=trusted_device_token,
+            request=request,
+            user_id=user.id
+        )
+        print(f"DEBUG: Signin - Trusted device verification result: {trusted_device is not None}")
+    else:
+        print(f"DEBUG: Signin - No trusted device token or 2FA not enabled")
+    
+    # If 2FA is enabled and no valid trusted device, require 2FA
+    if two_factor and not trusted_device:
+        # Generate a temporary token for 2FA verification
+        temp_token = create_access_token(
+            {"sub": str(user.id), "username": user.username, "email": user.email, "temp_2fa": True}, 
+            user=user, 
+            expires_delta=timedelta(minutes=5)
+        )
+        
+        # Send verification code if SMS or email
+        if two_factor.method == 'sms':
+            # In production, send actual SMS
+            verification_code = "123456"  # Demo code
+            # TODO: Implement actual SMS sending
+        elif two_factor.method == 'email':
+            # In production, send actual email
+            verification_code = "123456"  # Demo code
+            # TODO: Implement actual email sending
+        
+        return {
+            "requires_2fa": True,
+            "method": two_factor.method,
+            "temp_token": temp_token,
+            "message": f"Please verify your {two_factor.method} authentication"
+        }
+    
+    # No 2FA required or trusted device found, proceed with normal login
+    jti = str(uuid.uuid4())
+    device_info = request.headers.get("X-Device-Info")
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+    
+    session = UserSession(
+        user_id=user.id,
+        token_jti=jti,
+        device_info=device_info,
+        ip_address=ip_address,
+        user_agent=user_agent,
+        is_current=True,
+        trusted_device_id=trusted_device.id if trusted_device else None
+    )
+    db.add(session)
+    await db.commit()
+    
+    access_token = create_access_token({"sub": str(user.id), "username": user.username, "email": user.email}, user=user, jti=jti)
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/verify-2fa")
+async def verify_2fa_login(request: Request, db: AsyncSession = Depends(get_db)):
+    """Verify 2FA code during login and complete the authentication process"""
+    print("DEBUG: verify-2fa endpoint called")
+    print(f"DEBUG: Request method: {request.method}")
+    print(f"DEBUG: Request URL: {request.url}")
+    print(f"DEBUG: Request headers: {dict(request.headers)}")
+    
+    auth_header = request.headers.get("Authorization")
+    print(f"DEBUG: Authorization header: {auth_header}")
+    
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    
+    temp_token = auth_header.split(" ")[1]
+    print(f"DEBUG: Temp token: {temp_token[:20]}...")
+    
+    try:
+        payload = jwt.decode(temp_token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"DEBUG: JWT payload: {payload}")
+        
+        if not payload.get("temp_2fa"):
+            raise HTTPException(status_code=401, detail="Invalid temporary token")
+        
+        user_id = int(payload.get("sub"))
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        print(f"DEBUG: JWT decode error: {e}")
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Get the verification code from request body
+    try:
+        # Try to get the raw body first
+        body_bytes = await request.body()
+        print(f"DEBUG: Raw request body bytes: {body_bytes}")
+        
+        # Try to parse as JSON
+        body = await request.json()
+        print(f"DEBUG: Parsed request body: {body}")
+        
+        verification_code = body.get("code")
+        if not verification_code:
+            print(f"DEBUG: No 'code' field found in body: {body}")
+            raise HTTPException(status_code=400, detail="Verification code is required")
+            
+    except Exception as e:
+        print(f"DEBUG: Error parsing request body: {e}")
+        print(f"DEBUG: Content-Type: {request.headers.get('content-type')}")
+        raise HTTPException(status_code=400, detail="Invalid request body")
+    
+    print(f"DEBUG: Verification code extracted: {verification_code}")
+    
+    # Get user and 2FA settings
+    result = await db.execute(select(UserModel).where(UserModel.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    print(f"DEBUG: Found user: {user.email}")
+    
+    two_factor_result = await db.execute(select(TwoFactorAuth).where(TwoFactorAuth.user_id == user_id, TwoFactorAuth.is_enabled == True))
+    two_factor = two_factor_result.scalars().first()
+    if not two_factor:
+        raise HTTPException(status_code=400, detail="Two-factor authentication is not enabled")
+    
+    print(f"DEBUG: Found 2FA settings: method={two_factor.method}")
+    
+    # Verify the code
+    is_valid = False
+    
+    if two_factor.method == 'authenticator':
+        if not two_factor.secret_key:
+            raise HTTPException(status_code=500, detail="No secret key found")
+        
+        print(f"DEBUG: Using authenticator method, secret key: {two_factor.secret_key[:10]}...")
+        totp = pyotp.TOTP(two_factor.secret_key)
+        is_valid = totp.verify(verification_code, valid_window=1)
+        print(f"DEBUG: TOTP verification result: {is_valid}")
+    
+    elif two_factor.method in ['sms', 'email']:
+        # Verify against database temp_code fields
+        if not two_factor.temp_code or not two_factor.temp_code_expires_at:
+            print(f"DEBUG: No temp code found for {two_factor.method}")
+            is_valid = False
+        else:
+            # Check if code is expired
+            from datetime import datetime
+            current_time = datetime.utcnow()
+            if current_time > two_factor.temp_code_expires_at:
+                print(f"DEBUG: Code expired for {two_factor.method}")
+                is_valid = False
+            else:
+                # Check if code matches
+                is_valid = two_factor.temp_code == verification_code
+                print(f"DEBUG: Code verification result for {two_factor.method}: {is_valid}")
+            
+            # Clear temp code after verification attempt
+            two_factor.temp_code = None
+            two_factor.temp_code_expires_at = None
+            await db.commit()
+    
+    # Check if it's a backup code
+    if not is_valid:
+        import hashlib
+        code_hash = hashlib.sha256(verification_code.encode()).hexdigest()
+        from app.models.two_factor_auth import TwoFactorBackupCode
+        backup_result = await db.execute(select(TwoFactorBackupCode).where(
+            TwoFactorBackupCode.user_id == user_id,
+            TwoFactorBackupCode.code_hash == code_hash,
+            TwoFactorBackupCode.is_used == False
+        ))
+        backup_code = backup_result.scalars().first()
+        
+        if backup_code:
+            is_valid = True
+            backup_code.is_used = True
+            backup_code.used_at = datetime.utcnow()
+            await db.commit()
+    
+    if not is_valid:
+        print(f"DEBUG: Verification failed, code was invalid")
+        raise HTTPException(status_code=400, detail="Invalid verification code")
+    
+    print(f"DEBUG: Verification successful, creating session")
+    
+    # Check if user wants to remember this device
+    remember_device = body.get("remember_device", False)
+    print(f"DEBUG: Verify 2FA - Remember device: {remember_device}")
+    trusted_device = None
+    
+    if remember_device:
+        # Create trusted device
+        from app.services.trusted_device_service import trusted_device_service
+        trusted_device_data = trusted_device_service.create_trusted_device(
+            user_id=user.id,
+            request=request,
+            remember_device=True,
+            expiration_days=7
+        )
+        
+        if trusted_device_data:
+            trusted_device = await trusted_device_service.save_trusted_device(
+                db, 
+                trusted_device_data["trusted_device"]
+            )
+            print(f"DEBUG: Verify 2FA - Trusted device created: {trusted_device is not None}")
+        else:
+            print(f"DEBUG: Verify 2FA - Failed to create trusted device data")
+    else:
+        print(f"DEBUG: Verify 2FA - User did not choose to remember device")
+    
+    # 2FA verified, create session and return access token
     jti = str(uuid.uuid4())
     device_info = request.headers.get("X-Device-Info")
     ip_address = request.client.host if request.client else None
@@ -288,12 +530,117 @@ def signin(auth: UserAuth, request: Request, db: Session = Depends(get_db)):
         device_info=device_info,
         ip_address=ip_address,
         user_agent=user_agent,
-        is_current=True
+        is_current=True,
+        trusted_device_id=trusted_device.id if trusted_device else None
     )
     db.add(session)
-    db.commit()
+    await db.commit()
+    
     access_token = create_access_token({"sub": str(user.id), "username": user.username, "email": user.email}, user=user, jti=jti)
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Create response with trusted device token if created
+    response_data = {"access_token": access_token, "token_type": "bearer"}
+    
+    if trusted_device:
+        response_data["trusted_device_token"] = trusted_device_data["token"]
+        response_data["trusted_device_expires"] = trusted_device.expires_at.isoformat()
+    
+    print(f"DEBUG: Created access token, returning response")
+    
+    # Create response with cookie if trusted device was created
+    from fastapi.responses import JSONResponse
+    response = JSONResponse(content=response_data)
+    
+    if trusted_device:
+        # Set trusted device token as HTTP-only cookie
+        print(f"DEBUG: Verify 2FA - Setting trusted device cookie")
+        response.set_cookie(
+            key="trusted_device_token",
+            value=trusted_device_data["token"],
+            max_age=7 * 24 * 60 * 60,  # 7 days
+            httponly=True,
+            secure=False,  # Set to True in production with HTTPS
+            samesite="lax"
+        )
+    else:
+        print(f"DEBUG: Verify 2FA - No trusted device to set cookie for")
+    
+    return response
+
+@router.post("/send-sms-code")
+def send_sms_code(request: Request, db: Session = Depends(get_db)):
+    """Send SMS verification code"""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    
+    temp_token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(temp_token, SECRET_KEY, algorithms=[ALGORITHM])
+        if not payload.get("temp_2fa"):
+            raise HTTPException(status_code=401, detail="Invalid temporary token")
+        
+        user_id = int(payload.get("sub"))
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Get user and 2FA settings
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    two_factor = db.query(TwoFactorAuth).filter(TwoFactorAuth.user_id == user_id, TwoFactorAuth.is_enabled == True).first()
+    if not two_factor or two_factor.method != 'sms':
+        raise HTTPException(status_code=400, detail="SMS 2FA is not enabled")
+    
+    if not two_factor.phone_number:
+        raise HTTPException(status_code=400, detail="No phone number configured for SMS 2FA")
+    
+    # Send SMS using production service
+    success = notification_service.send_2fa_sms(user_id, two_factor.phone_number)
+    
+    if success:
+        return {"message": "SMS verification code sent successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send SMS verification code")
+
+@router.post("/send-email-code")
+def send_email_code(request: Request, db: Session = Depends(get_db)):
+    """Send email verification code"""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+    
+    temp_token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(temp_token, SECRET_KEY, algorithms=[ALGORITHM])
+        if not payload.get("temp_2fa"):
+            raise HTTPException(status_code=401, detail="Invalid temporary token")
+        
+        user_id = int(payload.get("sub"))
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Get user and 2FA settings
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    two_factor = db.query(TwoFactorAuth).filter(TwoFactorAuth.user_id == user_id, TwoFactorAuth.is_enabled == True).first()
+    if not two_factor or two_factor.method != 'email':
+        raise HTTPException(status_code=400, detail="Email 2FA is not enabled")
+    
+    # Send email using production service
+    success = notification_service.send_2fa_email(user_id, user.email)
+    
+    if success:
+        return {"message": "Email verification code sent successfully"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send email verification code")
 
 # --- fastapi-users setup ---
 async def get_user_db(db: AsyncSession = Depends(get_db)):
@@ -441,6 +788,39 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
                 db.add(user)
                 await db.commit()
                 await db.refresh(user)
+            
+            # Check if 2FA is enabled
+            two_factor_result = await db.execute(select(TwoFactorAuth).where(TwoFactorAuth.user_id == user.id, TwoFactorAuth.is_enabled == True))
+            two_factor = two_factor_result.scalars().first()
+            
+            # Check for trusted device token
+            trusted_device_token = request.cookies.get("trusted_device_token")
+            trusted_device = None
+            
+            if trusted_device_token and two_factor:
+                # Verify trusted device
+                from app.services.trusted_device_service import trusted_device_service
+                trusted_device = await trusted_device_service.verify_trusted_device(
+                    db=db,
+                    token=trusted_device_token,
+                    request=request,
+                    user_id=user.id
+                )
+                print(f"DEBUG: Google OAuth - Trusted device verification result: {trusted_device is not None}")
+            
+            if two_factor and not trusted_device:
+                # Generate a temporary token for 2FA verification
+                temp_token = create_access_token(
+                    {"sub": str(user.id), "username": user.username, "email": user.email, "temp_2fa": True}, 
+                    user=user, 
+                    expires_delta=timedelta(minutes=5)
+                )
+                
+                # Redirect to 2FA verification page
+                redirect_url = f"http://localhost:4200/two-factor-verification?temp_token={temp_token}&method={two_factor.method}"
+                return RedirectResponse(url=redirect_url)
+            
+            # No 2FA required, proceed with normal login
             jti = str(uuid.uuid4())
             device_info = request.headers.get("X-Device-Info")
             ip_address = request.client.host if request.client else None
@@ -451,7 +831,8 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
                 device_info=device_info,
                 ip_address=ip_address,
                 user_agent=user_agent,
-                is_current=True
+                is_current=True,
+                trusted_device_id=trusted_device.id if trusted_device else None
             )
             db.add(session)
             await db.commit()

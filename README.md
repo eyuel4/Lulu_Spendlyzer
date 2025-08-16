@@ -79,8 +79,8 @@ The application implements comprehensive error handling and logging that:
 
 ## ToDo 🚧
 - [x] Fix DB Init issue after DB log have been implemented.
-- [] Validate system level logs are saved in DB.
-- [ ] Show pending invitation status on dashboard
+- [x] Validate system level logs are saved in DB.
+- [] Show pending invitation status on dashboard
 - [ ] Allow users to switch from personal to family accounts
 - [ ] Implement account visibility controls for family groups
 - [ ] Refactor dashboard with monthly/yearly analysis graphs

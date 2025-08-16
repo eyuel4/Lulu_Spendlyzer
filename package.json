@@ -1,5 +1,9 @@
 {
   "dependencies": {
+    "ag-grid-angular": "^34.1.1",
+    "ag-grid-community": "^34.1.1",
+    "chart.js": "^4.5.0",
+    "chartjs-adapter-date-fns": "^3.0.0",
     "ua-parser-js": "^2.0.4"
   }
 }

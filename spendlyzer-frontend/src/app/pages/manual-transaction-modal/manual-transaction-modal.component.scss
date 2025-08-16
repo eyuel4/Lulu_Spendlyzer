@@ -1,0 +1,138 @@
+:host {
+  display: block;
+}
+
+// AG Grid v33+ Theming API - Custom styles
+::ng-deep .ag-theme-quartz {
+  --ag-header-height: 40px;
+  --ag-row-height: 48px;
+  --ag-font-size: 14px;
+  --ag-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+// Dark theme overrides
+.dark ::ng-deep .ag-theme-quartz {
+  --ag-background-color: #1e293b;
+  --ag-foreground-color: #e5e7eb;
+  --ag-header-background-color: #334155;
+  --ag-header-foreground-color: #cbd5e1;
+  --ag-border-color: #475569;
+  --ag-row-hover-color: #334155;
+  --ag-selected-row-background-color: #1e40af;
+  --ag-odd-row-background-color: #1e293b;
+  --ag-row-border-color: #475569;
+  --ag-cell-horizontal-border: solid #475569;
+}
+
+// Custom cell editor styles
+::ng-deep .ag-cell-edit-input {
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+// Delete button hover effect
+::ng-deep .ag-cell button:hover {
+  background-color: #fee2e2;
+  border-radius: 4px;
+}
+
+.dark ::ng-deep .ag-cell button:hover {
+  background-color: #7f1d1d;
+}
+
+// Custom cell editor styles
+::ng-deep .ag-cell-edit-input {
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+// Delete button hover effect
+::ng-deep .ag-cell button:hover {
+  background-color: #fee2e2;
+  border-radius: 4px;
+}
+
+.dark ::ng-deep .ag-cell button:hover {
+  background-color: #7f1d1d;
+}
+
+// Additional custom styles for the manual transaction modal
+.modal-content {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Custom scrollbar for the modal
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+// Dark mode scrollbar
+.dark .modal-content::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .modal-content::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+// Focus styles for better accessibility
+input:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+// Hover effects for category and budget type cards
+.category-card,
+.budget-card {
+  transition: all 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+  
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .budget-grid {
+    grid-template-columns: 1fr;
+  }
+}

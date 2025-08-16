@@ -59,5 +59,31 @@ class UserPreferences(BaseModel):
     primary_goal = Column(JSON, nullable=False)  # List of goals as JSON
     financial_focus = Column(JSON, nullable=False)  # List of focus areas as JSON
     experience_level = Column(String, nullable=False)  # 'beginner', 'intermediate', 'advanced'
+    default_transaction_method = Column(String(50), nullable=True)  # 'bank-api', 'upload-statement', 'manual'
+    theme = Column(String(20), default='light')  # 'light', 'dark'
+    notifications = Column(JSON, default={
+        'email': True,
+        'push': True,
+        'sms': False
+    })
+    date_format = Column(String(20), default='MM/DD/YYYY')
+    currency = Column(String(10), default='USD')
     
-    user = relationship("User", back_populates="preferences") 
+    user = relationship("User", back_populates="preferences")
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'account_type': self.account_type,
+            'primary_goal': self.primary_goal,
+            'financial_focus': self.financial_focus,
+            'experience_level': self.experience_level,
+            'defaultTransactionMethod': self.default_transaction_method,
+            'theme': self.theme,
+            'notifications': self.notifications,
+            'dateFormat': self.date_format,
+            'currency': self.currency,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        } 

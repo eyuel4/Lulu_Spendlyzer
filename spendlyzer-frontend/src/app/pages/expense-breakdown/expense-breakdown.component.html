@@ -1,0 +1,31 @@
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 transition-colors duration-200">
+  <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 transition-colors duration-200">Expense Breakdown</h3>
+  
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Chart Section -->
+    <div class="relative h-80 lg:col-span-2">
+      <canvas #expenseChart></canvas>
+    </div>
+    
+    <!-- Category List Section -->
+    <div class="space-y-2">
+      <div *ngFor="let category of categoryData.slice(0, 6)" class="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+        <div class="flex items-center space-x-2">
+          <span class="text-lg">{{ category.icon }}</span>
+          <div>
+            <div class="font-medium text-slate-900 dark:text-white text-sm">{{ category.category }}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">{{ category.percentage.toFixed(1) }}%</div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="font-semibold text-slate-900 dark:text-white text-sm">${{ category.amount.toFixed(2) }}</div>
+        </div>
+      </div>
+      
+      <div *ngIf="categoryData.length === 0" class="text-center py-4">
+        <div class="text-slate-400 dark:text-slate-500 text-lg mb-2">📊</div>
+        <p class="text-slate-500 dark:text-slate-400 text-sm">No expense data available</p>
+      </div>
+    </div>
+  </div>
+</div>

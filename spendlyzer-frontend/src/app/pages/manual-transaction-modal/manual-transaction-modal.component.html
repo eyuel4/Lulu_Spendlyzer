@@ -1,0 +1,104 @@
+<!-- Modal Backdrop -->
+<div 
+  *ngIf="isOpen" 
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+  (click)="onBackdropClick($event)"
+>
+  <!-- Modal Content -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden">
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Add Manual Transactions</h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            Add multiple transactions at once. Click on any cell to edit.
+          </p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <button 
+            (click)="addEmptyRow()"
+            class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+          >
+            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add Row
+          </button>
+          <button 
+            (click)="onCancel()"
+            class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200"
+          >
+            <svg class="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="px-6 py-6 flex-1 overflow-hidden">
+      <!-- Grid Container -->
+      <div class="h-96 w-full border border-slate-200 dark:border-slate-700 rounded-lg">
+        <!-- Debug info -->
+        <div class="p-2 bg-yellow-100 dark:bg-yellow-900 text-xs">
+          Debug: rowData length = {{ rowData.length }}, gridApi ready = {{ gridApi ? 'Yes' : 'No' }}
+        </div>
+        
+        <ag-grid-angular
+          class="w-full h-full"
+          [class.dark]="currentTheme === 'dark'"
+          [rowData]="rowData"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [gridOptions]="gridOptions"
+          (gridReady)="onGridReady($event)"
+        >
+        </ag-grid-angular>
+      </div>
+
+      <!-- Instructions -->
+      <div class="mt-4 p-4 bg-slate-50 dark:bg-slate-700 rounded-lg">
+        <h4 class="text-sm font-medium text-slate-900 dark:text-white mb-2">Quick Tips:</h4>
+        <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+          <li>• Click on any cell to edit the value</li>
+          <li>• Use Tab/Enter to navigate between cells</li>
+          <li>• Press Ctrl+C/Ctrl+V to copy/paste rows</li>
+          <li>• Drag the fill handle to copy values to adjacent cells</li>
+          <li>• Use the "Add Row" button to add more transactions</li>
+          <li>• Click the trash icon to delete a row</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center">
+      <div class="text-sm text-slate-600 dark:text-slate-400">
+        <span *ngIf="rowData.length > 0">
+          {{ rowData.length }} transaction{{ rowData.length > 1 ? 's' : '' }} ready to save
+        </span>
+        <span *ngIf="rowData.length === 0">
+          No transactions added yet
+        </span>
+      </div>
+      <div class="flex space-x-3">
+        <button 
+          type="button"
+          (click)="onCancel()"
+          class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors duration-200"
+        >
+          Cancel
+        </button>
+        <button 
+          type="button"
+          (click)="onSave()"
+          [disabled]="rowData.length === 0"
+          class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+        >
+          Save All Transactions
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

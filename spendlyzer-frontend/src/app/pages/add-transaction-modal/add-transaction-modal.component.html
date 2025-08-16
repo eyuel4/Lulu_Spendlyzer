@@ -1,0 +1,101 @@
+<!-- Modal Backdrop -->
+<div 
+  *ngIf="isOpen" 
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+  (click)="onBackdropClick($event)"
+>
+  <!-- Modal Content -->
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-slate-900 dark:text-white">Add Transaction</h2>
+        <button 
+          (click)="onClose()"
+          class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200"
+        >
+          <svg class="w-5 h-5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Choose how you'd like to add your transaction</p>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="px-6 py-6">
+      <!-- Options Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div 
+          *ngFor="let option of transactionOptions"
+          (click)="onOptionSelect(option.id)"
+          class="relative cursor-pointer group"
+        >
+          <div 
+            class="p-4 border-2 rounded-lg transition-all duration-200 h-full"
+            [ngClass]="{
+              'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20': selectedOption === option.id,
+              'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600': selectedOption !== option.id
+            }"
+          >
+            <!-- Selection Indicator -->
+            <div 
+              *ngIf="selectedOption === option.id"
+              class="absolute top-3 right-3 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center"
+            >
+              <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+
+            <!-- Icon -->
+            <div class="flex items-center justify-center w-12 h-12 rounded-lg mb-3" [ngClass]="option.bgColor">
+              <svg class="w-6 h-6" [ngClass]="option.color" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="option.icon"></path>
+              </svg>
+            </div>
+
+            <!-- Title -->
+            <h3 class="font-semibold text-slate-900 dark:text-white mb-2">{{ option.title }}</h3>
+
+            <!-- Description -->
+            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ option.description }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Default Selection Checkbox -->
+      <div class="flex items-center space-x-3 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+        <input 
+          type="checkbox" 
+          id="setAsDefault"
+          [(ngModel)]="setAsDefault"
+          class="w-4 h-4 text-indigo-600 bg-white border-slate-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-slate-800 focus:ring-2 dark:bg-slate-700 dark:border-slate-600"
+        >
+        <label 
+          for="setAsDefault" 
+          class="text-sm text-slate-700 dark:text-slate-300 cursor-pointer"
+        >
+          Keep as default for future transactions
+        </label>
+      </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-end space-x-3">
+      <button 
+        (click)="onClose()"
+        class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors duration-200"
+      >
+        Cancel
+      </button>
+      <button 
+        (click)="onContinue()"
+        [disabled]="!selectedOption"
+        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+      >
+        Continue
+      </button>
+    </div>
+  </div>
+</div>

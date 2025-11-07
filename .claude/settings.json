@@ -1,0 +1,83 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/capture_tool_call.py\" pre"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/capture_tool_call.py\" post"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/capture_human_message.py\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/capture_agent_response.py\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/capture_repo_snapshot.py\" start"
+          },
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/capture_session_event.py\" start"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/capture_session_event.py\" end"
+          },
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/copy_raw_transcript.py\""
+          },
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/capture_repo_snapshot.py\" end"
+          },
+          {
+            "type": "command",
+            "command": "python \"%CLAUDE_PROJECT_DIR%/.claude/hooks/generate_session_summary.py\""
+          }
+        ]
+      }
+    ]
+  },
+  "model": "merino-v3-p"
+}

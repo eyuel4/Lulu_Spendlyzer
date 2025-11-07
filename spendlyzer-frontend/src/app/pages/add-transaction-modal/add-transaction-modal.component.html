@@ -99,3 +99,10 @@
     </div>
   </div>
 </div>
+
+<!-- Document Upload Modal -->
+<app-document-upload-modal
+  [isOpen]="showDocumentUploadModal"
+  (closeModal)="onDocumentUploadClose()"
+  (filesUploaded)="onDocumentsUploaded($event)"
+></app-document-upload-modal>

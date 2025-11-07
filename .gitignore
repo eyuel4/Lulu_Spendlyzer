@@ -48,3 +48,10 @@ app/schemas/__pycache__/user.cpython-312.pyc
 app/services/__pycache__/logging_service.cpython-312.pyc
 app/services/__pycache__/notification_service.cpython-312.pyc
 app/services/__pycache__/trusted_device_service.cpython-312.pyc
+app/__pycache__/*
+app/core/__pycache__/init_db.cpython-312.pyc
+app/models/__pycache__/user.cpython-312.pyc
+app/services/__pycache__/logging_service.cpython-312.pyc
+app/schemas/__pycache__/user_preferences.cpython-312.pyc
+app/models/__pycache__/user.cpython-312.pyc
+app/models/__pycache__/system_log.cpython-312.pyc

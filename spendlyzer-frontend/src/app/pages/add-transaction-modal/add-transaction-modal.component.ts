@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserPreferencesService } from '../../services/user-preferences.service';
+import { DocumentUploadModalComponent } from '../document-upload-modal/document-upload-modal.component';
 
 export interface TransactionOption {
   id: string;
@@ -15,7 +16,7 @@ export interface TransactionOption {
 @Component({
   selector: 'app-add-transaction-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DocumentUploadModalComponent],
   templateUrl: './add-transaction-modal.component.html',
   styleUrls: ['./add-transaction-modal.component.scss']
 })
@@ -26,6 +27,7 @@ export class AddTransactionModalComponent {
 
   selectedOption: string = '';
   setAsDefault: boolean = false;
+  showDocumentUploadModal: boolean = false;
 
   constructor(private userPreferencesService: UserPreferencesService) {}
 
@@ -74,11 +76,16 @@ export class AddTransactionModalComponent {
         });
       }
 
-      this.optionSelected.emit({
-        option: this.selectedOption,
-        setAsDefault: this.setAsDefault
-      });
-      this.closeModal.emit();
+      // If upload statement is selected, show document upload modal
+      if (this.selectedOption === 'upload-statement') {
+        this.showDocumentUploadModal = true;
+      } else {
+        this.optionSelected.emit({
+          option: this.selectedOption,
+          setAsDefault: this.setAsDefault
+        });
+        this.closeModal.emit();
+      }
     }
   }
 
@@ -90,5 +97,19 @@ export class AddTransactionModalComponent {
     if (event.target === event.currentTarget) {
       this.onClose();
     }
+  }
+
+  onDocumentUploadClose(): void {
+    this.showDocumentUploadModal = false;
+  }
+
+  onDocumentsUploaded(files: any[]): void {
+    console.log('Documents uploaded:', files);
+    // Handle uploaded files - could emit to parent component or process directly
+    this.optionSelected.emit({
+      option: 'upload-statement',
+      setAsDefault: this.setAsDefault
+    });
+    this.closeModal.emit();
   }
 }

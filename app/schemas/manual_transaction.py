@@ -2,8 +2,10 @@
 Schemas for manual transaction operations
 Includes single transaction, bulk upload, and duplicate handling
 """
-from pydantic import BaseModel, ConfigDict, Field, validator
-from datetime import datetime, date
+from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from datetime import datetime, date as DateType
 from typing import Optional, List
 from decimal import Decimal
 
@@ -21,7 +23,7 @@ class MetadataResponse(BaseModel):
 
 class ManualTransactionBase(BaseModel):
     """Base schema for manual transactions"""
-    date: date = Field(..., description="Transaction date (cannot be in the future)")
+    date: DateType = Field(..., description="Transaction date (cannot be in the future)")
     amount: float = Field(..., gt=0, description="Transaction amount (must be positive)")
     currency: str = Field(default="USD", description="USD or CAD")
     description: str = Field(..., min_length=1, max_length=255, description="Transaction description")
@@ -39,24 +41,21 @@ class ManualTransactionBase(BaseModel):
     card_id: int = Field(..., description="Card ID associated with the transaction")
     is_shared: bool = Field(default=False, description="Whether to share with family group")
 
-    @validator('date')
-    def date_not_in_future(cls, v):
-        """Validate that date is not in the future"""
-        if v > date.today():
+    @field_validator('date')
+    @classmethod
+    def validate_date(cls, v):
+        """Validate that date is not in the future and not too old"""
+        if v > DateType.today():
             raise ValueError('Transaction date cannot be in the future')
-        return v
-
-    @validator('date')
-    def date_not_too_old(cls, v):
-        """Validate that date is not more than 2 years old"""
         max_years_back = 2
-        min_date = date.today().replace(year=date.today().year - max_years_back)
+        min_date = DateType.today().replace(year=DateType.today().year - max_years_back)
         if v < min_date:
             raise ValueError(f'Transaction date cannot be more than {max_years_back} years in the past')
         return v
 
-    @validator('currency')
-    def currency_validation(cls, v):
+    @field_validator('currency')
+    @classmethod
+    def validate_currency(cls, v):
         """Validate currency is USD or CAD"""
         if v not in ['USD', 'CAD']:
             raise ValueError('Currency must be USD or CAD')
@@ -96,7 +95,7 @@ class BulkTransactionCreateRequest(BaseModel):
 
 class ManualTransactionUpdate(BaseModel):
     """Schema for updating a manual transaction"""
-    date: Optional[date] = None
+    date: Optional[DateType] = None
     amount: Optional[float] = Field(None, gt=0)
     currency: Optional[str] = None
     description: Optional[str] = Field(None, min_length=1, max_length=255)
@@ -109,15 +108,17 @@ class ManualTransactionUpdate(BaseModel):
     budget_type_id: Optional[int] = None
     is_shared: Optional[bool] = None
 
-    @validator('date')
-    def date_not_in_future(cls, v):
+    @field_validator('date')
+    @classmethod
+    def validate_date(cls, v):
         """Validate that date is not in the future"""
-        if v and v > date.today():
+        if v and v > DateType.today():
             raise ValueError('Transaction date cannot be in the future')
         return v
 
-    @validator('currency')
-    def currency_validation(cls, v):
+    @field_validator('currency')
+    @classmethod
+    def validate_currency(cls, v):
         """Validate currency is USD or CAD"""
         if v and v not in ['USD', 'CAD']:
             raise ValueError('Currency must be USD or CAD')

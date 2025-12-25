@@ -1,15 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-import boto3
 import uuid
 import os
 import mimetypes
 from datetime import datetime
 import asyncio
-from botocore.exceptions import ClientError, NoCredentialsError
 import logging
+
+# Optional AWS S3 imports
+try:
+    import boto3
+    from botocore.exceptions import ClientError, NoCredentialsError
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
+    boto3 = None
+    ClientError = Exception
+    NoCredentialsError = Exception
 
 from ..core.database import get_db
 from ..core.auth import get_current_user
@@ -37,16 +46,20 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 # Initialize S3 client
-try:
-    s3_client = boto3.client(
-        's3',
-        region_name=S3_REGION,
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-    )
-except NoCredentialsError:
-    logger.warning("AWS credentials not found. S3 uploads will be disabled.")
-    s3_client = None
+s3_client = None
+if BOTO3_AVAILABLE:
+    try:
+        s3_client = boto3.client(
+            's3',
+            region_name=S3_REGION,
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+        )
+    except NoCredentialsError:
+        logger.warning("AWS credentials not found. S3 uploads will be disabled.")
+        s3_client = None
+else:
+    logger.warning("boto3 not installed. S3 uploads will be disabled. Install boto3 to enable S3 functionality.")
 
 # Allowed file types
 ALLOWED_MIME_TYPES = [
@@ -139,7 +152,7 @@ async def upload_document(
     file: UploadFile = File(...),
     fileName: str = Form(...),
     fileType: str = Form(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Upload a document file to S3"""
@@ -206,7 +219,7 @@ async def upload_document_from_url(
     fileUrl: str = Form(...),
     fileName: str = Form(...),
     fileType: str = Form(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Upload a document from URL to S3"""
@@ -278,7 +291,7 @@ async def get_upload_progress(file_id: str):
 
 @router.get("/files", response_model=List[UploadResponse])
 async def get_uploaded_files(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get list of uploaded files for current user"""
@@ -291,7 +304,7 @@ async def get_uploaded_files(
 async def delete_file(
     file_id: str,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Delete an uploaded file"""
@@ -321,7 +334,7 @@ async def delete_file(
 async def process_document(
     file_id: str,
     background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Process uploaded document for transaction extraction"""
@@ -362,7 +375,7 @@ async def get_processing_status(file_id: str):
     return processing_status[file_id]
 
 
-async def process_document_background(file_id: str, user_id: int, db: Session):
+async def process_document_background(file_id: str, user_id: int, db: AsyncSession):
     """Background task to process document"""
     try:
         # Simulate document processing

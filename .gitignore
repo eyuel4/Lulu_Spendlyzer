@@ -6,6 +6,7 @@ node_modules/
 ./node_modules/
 .venv/
 
+.env
 ./app/.env
 ./app/__pycache__
 ./app/__pycache__/main.cpython-312.pyc

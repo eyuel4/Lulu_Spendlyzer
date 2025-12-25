@@ -140,7 +140,7 @@ class ManualTransactionService:
                 filename=bulk_request.filename or "bulk_upload.csv",
                 total_rows=len(bulk_request.transactions),
                 status="PROCESSING",
-                metadata={}
+                upload_metadata={}
             )
             db.add(bulk_upload)
             await db.commit()

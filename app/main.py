@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from dotenv import load_dotenv
-from app.routes import user, card, transaction, category_override, report, grocery_category, shopping_category, auth, family, logs, billing, feature_request, user_session, two_factor_auth, trusted_device, user_preferences, manual_transaction
+from app.routes import user, card, transaction, category_override, report, grocery_category, shopping_category, auth, family, logs, billing, feature_request, user_session, two_factor_auth, trusted_device, user_preferences, manual_transaction, upload
 from app.core.cache import get_cache
 
 # Set the full path to the .env file

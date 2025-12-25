@@ -21,7 +21,7 @@ class BulkUpload(BaseModel):
     duplicate_count = Column(Integer, default=0)  # Duplicates identified
     status = Column(String(20), nullable=False, index=True)  # 'PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'
     error_message = Column(Text, nullable=True)  # Error details if FAILED
-    metadata = Column(JSON, nullable=True)  # Additional metadata (date range, categories used, etc.)
+    upload_metadata = Column(JSON, nullable=True)  # Additional metadata (date range, categories used, etc.)
 
     # Timestamps
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

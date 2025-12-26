@@ -1,0 +1,2570 @@
+{
+	"info": {
+		"_postman_id": "spendlyzer-api-collection",
+		"name": "Spendlyzer API",
+		"description": "Complete API collection for Spendlyzer Expense App backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Sign Up",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signup",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "signup"]
+						}
+					}
+				},
+				{
+					"name": "Sign In",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"login\": \"johndoe\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signin",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "signin"]
+						}
+					}
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "me"]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"john@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/forgot-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"reset_token_here\",\n  \"new_password\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/reset-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "reset-password"]
+						}
+					}
+				},
+				{
+					"name": "Google OAuth Login",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/google/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "google", "login"]
+						}
+					}
+				},
+				{
+					"name": "Setup Family",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"family_name\": \"Doe Family\",\n  \"invitees\": [\n    {\n      \"email\": \"jane@example.com\",\n      \"first_name\": \"Jane\",\n      \"last_name\": \"Doe\",\n      \"role\": \"member\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/setup-family",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "setup-family"]
+						}
+					}
+				},
+				{
+					"name": "Get User Preferences",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/preferences",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "preferences"]
+						}
+					}
+				},
+				{
+					"name": "Save User Preferences",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"account_type\": \"personal\",\n  \"primary_goal\": [\"save_money\"],\n  \"financial_focus\": [\"tracking\"],\n  \"experience_level\": \"beginner\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/preferences",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "preferences"]
+						}
+					}
+				},
+				{
+					"name": "Verify 2FA",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{temp_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"123456\",\n  \"remember_device\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-2fa",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "verify-2fa"]
+						}
+					}
+				},
+				{
+					"name": "Send SMS Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{temp_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/send-sms-code",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "send-sms-code"]
+						}
+					}
+				},
+				{
+					"name": "Send Email Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{temp_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/send-email-code",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "send-email-code"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Two Factor Authentication",
+			"item": [
+				{
+					"name": "Get 2FA Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/2fa/settings",
+							"host": ["{{base_url}}"],
+							"path": ["users", "2fa", "settings"]
+						}
+					}
+				},
+				{
+					"name": "Enable 2FA",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"method\": \"authenticator\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2fa/enable",
+							"host": ["{{base_url}}"],
+							"path": ["users", "2fa", "enable"]
+						}
+					}
+				},
+				{
+					"name": "Verify 2FA Setup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2fa/verify",
+							"host": ["{{base_url}}"],
+							"path": ["users", "2fa", "verify"]
+						}
+					}
+				},
+				{
+					"name": "Disable 2FA",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"verification_code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2fa/disable",
+							"host": ["{{base_url}}"],
+							"path": ["users", "2fa", "disable"]
+						}
+					}
+				},
+				{
+					"name": "Regenerate Backup Codes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/2fa/backup-codes",
+							"host": ["{{base_url}}"],
+							"path": ["users", "2fa", "backup-codes"]
+						}
+					}
+				},
+				{
+					"name": "Send Setup Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"method\": \"sms\",\n  \"phone_number\": \"+1234567890\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2fa/send-setup-code",
+							"host": ["{{base_url}}"],
+							"path": ["users", "2fa", "send-setup-code"]
+						}
+					}
+				},
+				{
+					"name": "Verify Setup Code",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/2fa/verify-setup",
+							"host": ["{{base_url}}"],
+							"path": ["users", "2fa", "verify-setup"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Trusted Devices",
+			"item": [
+				{
+					"name": "Create Trusted Device",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"remember_device\": true,\n  \"expiration_days\": 7\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/trust-device",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "trust-device"]
+						}
+					}
+				},
+				{
+					"name": "Get Trusted Devices",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/trusted-devices",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "trusted-devices"]
+						}
+					}
+				},
+				{
+					"name": "Check Trusted Device",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/trusted-devices/check",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "trusted-devices", "check"]
+						}
+					}
+				},
+				{
+					"name": "Revoke Trusted Device",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/trust-device/:device_id",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "trust-device", ":device_id"],
+							"variable": [
+								{
+									"key": "device_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Revoke All Trusted Devices",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/trusted-devices/all",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "trusted-devices", "all"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Sessions",
+			"item": [
+				{
+					"name": "List Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/sessions/",
+							"host": ["{{base_url}}"],
+							"path": ["sessions", ""]
+						}
+					}
+				},
+				{
+					"name": "Revoke Session",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/sessions/:session_id",
+							"host": ["{{base_url}}"],
+							"path": ["sessions", ":session_id"],
+							"variable": [
+								{
+									"key": "session_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Revoke All Sessions",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/sessions/",
+							"host": ["{{base_url}}"],
+							"path": ["sessions", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"username\": \"johndoe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/",
+							"host": ["{{base_url}}"],
+							"path": ["users", ""]
+						}
+					}
+				},
+				{
+					"name": "List Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/?skip=0&limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["users", ""],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get User",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/:user_id",
+							"host": ["{{base_url}}"],
+							"path": ["users", ":user_id"],
+							"variable": [
+								{
+									"key": "user_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"first_name\": \"John Updated\",\n  \"last_name\": \"Doe Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/:user_id",
+							"host": ["{{base_url}}"],
+							"path": ["users", ":user_id"],
+							"variable": [
+								{
+									"key": "user_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/:user_id",
+							"host": ["{{base_url}}"],
+							"path": ["users", ":user_id"],
+							"variable": [
+								{
+									"key": "user_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Notification Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/notification-settings",
+							"host": ["{{base_url}}"],
+							"path": ["users", "notification-settings"]
+						}
+					}
+				},
+				{
+					"name": "Update Notification Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"emailNotifications\": true,\n  \"pushNotifications\": false,\n  \"transactionAlerts\": true,\n  \"budgetAlerts\": true,\n  \"familyUpdates\": false,\n  \"marketingEmails\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/notification-settings",
+							"host": ["{{base_url}}"],
+							"path": ["users", "notification-settings"]
+						}
+					}
+				},
+				{
+					"name": "Get Privacy Settings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/privacy-settings",
+							"host": ["{{base_url}}"],
+							"path": ["users", "privacy-settings"]
+						}
+					}
+				},
+				{
+					"name": "Update Privacy Settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"profileVisibility\": \"private\",\n  \"dataSharing\": false,\n  \"analyticsSharing\": true,\n  \"allowFamilyAccess\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/privacy-settings",
+							"host": ["{{base_url}}"],
+							"path": ["users", "privacy-settings"]
+						}
+					}
+				},
+				{
+					"name": "Get Account Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/account-type",
+							"host": ["{{base_url}}"],
+							"path": ["users", "account-type"]
+						}
+					}
+				},
+				{
+					"name": "Convert to Family Account",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/convert-to-family",
+							"host": ["{{base_url}}"],
+							"path": ["users", "convert-to-family"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "User Preferences",
+			"item": [
+				{
+					"name": "Get User Preferences",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user-preferences/",
+							"host": ["{{base_url}}"],
+							"path": ["user-preferences", ""]
+						}
+					}
+				},
+				{
+					"name": "Update User Preferences",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"theme\": \"dark\",\n  \"currency\": \"USD\",\n  \"date_format\": \"MM/DD/YYYY\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/user-preferences/",
+							"host": ["{{base_url}}"],
+							"path": ["user-preferences", ""]
+						}
+					}
+				},
+				{
+					"name": "Update Default Transaction Method",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"method\": \"bank-api\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/user-preferences/default-transaction-method?method=bank-api",
+							"host": ["{{base_url}}"],
+							"path": ["user-preferences", "default-transaction-method"],
+							"query": [
+								{
+									"key": "method",
+									"value": "bank-api"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "Create Transaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 100.50,\n  \"description\": \"Grocery shopping\",\n  \"date\": \"2024-01-15\",\n  \"category_id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", ""]
+						}
+					}
+				},
+				{
+					"name": "List Transactions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/?skip=0&limit=100&month=2024-01",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", ""],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "month",
+									"value": "2024-01"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/:transaction_id",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", ":transaction_id"],
+							"variable": [
+								{
+									"key": "transaction_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Transaction",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 120.00,\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/:transaction_id",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", ":transaction_id"],
+							"variable": [
+								{
+									"key": "transaction_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Transaction",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/:transaction_id",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", ":transaction_id"],
+							"variable": [
+								{
+									"key": "transaction_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/summary/?month=2024-01",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "summary", ""],
+							"query": [
+								{
+									"key": "month",
+									"value": "2024-01"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transactions by Category",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/by-category/?month=2024-01",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "by-category", ""],
+							"query": [
+								{
+									"key": "month",
+									"value": "2024-01"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Manual Transactions",
+			"item": [
+				{
+					"name": "Create Manual Transaction",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2024-01-15\",\n  \"amount\": 50.00,\n  \"currency\": \"USD\",\n  \"description\": \"Coffee\",\n  \"merchant\": \"Starbucks\",\n  \"transaction_type_id\": 2,\n  \"expense_category_id\": 1,\n  \"payment_method_id\": 1,\n  \"budget_type_id\": 2,\n  \"card_id\": 1,\n  \"is_shared\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/manual/",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "manual", ""]
+						}
+					}
+				},
+				{
+					"name": "Bulk Create Transactions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"transactions\": [\n    {\n      \"date\": \"2024-01-15\",\n      \"amount\": 50.00,\n      \"currency\": \"USD\",\n      \"description\": \"Transaction 1\"\n    }\n  ],\n  \"filename\": \"transactions.csv\",\n  \"allow_duplicates\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/manual/bulk",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "manual", "bulk"]
+						}
+					}
+				},
+				{
+					"name": "Update Manual Transaction",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 60.00,\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/manual/:transaction_id",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "manual", ":transaction_id"],
+							"variable": [
+								{
+									"key": "transaction_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Manual Transaction",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/manual/:transaction_id",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "manual", ":transaction_id"],
+							"variable": [
+								{
+									"key": "transaction_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction Metadata",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/transactions/manual/metadata",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "manual", "metadata"]
+						}
+					}
+				},
+				{
+					"name": "Get Bulk Upload Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/transactions/manual/bulk/:bulk_upload_id",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "manual", "bulk", ":bulk_upload_id"],
+							"variable": [
+								{
+									"key": "bulk_upload_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Confirm Duplicate Handling",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"duplicate_transaction_ids\": [1, 2],\n  \"action\": \"ACCEPT\",\n  \"user_notes\": \"These are valid duplicates\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/transactions/manual/duplicates/confirm",
+							"host": ["{{base_url}}"],
+							"path": ["transactions", "manual", "duplicates", "confirm"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Plaid",
+			"item": [
+				{
+					"name": "Test Plaid Router",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/plaid/test",
+							"host": ["{{base_url}}"],
+							"path": ["plaid", "test"]
+						}
+					}
+				},
+				{
+					"name": "Create Link Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/plaid/create-link-token",
+							"host": ["{{base_url}}"],
+							"path": ["plaid", "create-link-token"]
+						}
+					}
+				},
+				{
+					"name": "Exchange Public Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"public_token\": \"public-sandbox-token\",\n  \"institution_name\": \"Chase\",\n  \"institution_id\": \"ins_1\",\n  \"accounts\": [\n    {\n      \"account_id\": \"acc_1\",\n      \"name\": \"Checking Account\",\n      \"type\": \"depository\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/plaid/exchange-token",
+							"host": ["{{base_url}}"],
+							"path": ["plaid", "exchange-token"]
+						}
+					}
+				},
+				{
+					"name": "Get Accounts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/plaid/accounts",
+							"host": ["{{base_url}}"],
+							"path": ["plaid", "accounts"]
+						}
+					}
+				},
+				{
+					"name": "Sync Transactions",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/plaid/sync-transactions/:card_id",
+							"host": ["{{base_url}}"],
+							"path": ["plaid", "sync-transactions", ":card_id"],
+							"variable": [
+								{
+									"key": "card_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Disconnect Account",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/plaid/disconnect/:card_id",
+							"host": ["{{base_url}}"],
+							"path": ["plaid", "disconnect", ":card_id"],
+							"variable": [
+								{
+									"key": "card_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Plaid Webhook",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"webhook_type\": \"TRANSACTIONS\",\n  \"webhook_code\": \"INITIAL_UPDATE\",\n  \"item_id\": \"item_123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/plaid/webhook",
+							"host": ["{{base_url}}"],
+							"path": ["plaid", "webhook"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Cards",
+			"item": [
+				{
+					"name": "Create Card",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/cards/",
+							"host": ["{{base_url}}"],
+							"path": ["cards", ""]
+						}
+					}
+				},
+				{
+					"name": "List Cards",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cards/?skip=0&limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["cards", ""],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Card",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cards/:card_id",
+							"host": ["{{base_url}}"],
+							"path": ["cards", ":card_id"],
+							"variable": [
+								{
+									"key": "card_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Card",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/cards/:card_id",
+							"host": ["{{base_url}}"],
+							"path": ["cards", ":card_id"],
+							"variable": [
+								{
+									"key": "card_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Card",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cards/:card_id",
+							"host": ["{{base_url}}"],
+							"path": ["cards", ":card_id"],
+							"variable": [
+								{
+									"key": "card_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Family",
+			"item": [
+				{
+					"name": "Invite Family Members",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"family_group_id\": 1,\n  \"invitees\": [\n    {\n      \"email\": \"jane@example.com\",\n      \"first_name\": \"Jane\",\n      \"last_name\": \"Doe\",\n      \"role\": \"member\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/family/invite",
+							"host": ["{{base_url}}"],
+							"path": ["family", "invite"]
+						}
+					}
+				},
+				{
+					"name": "Accept Invite",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/family/invite/accept/:token",
+							"host": ["{{base_url}}"],
+							"path": ["family", "invite", "accept", ":token"],
+							"variable": [
+								{
+									"key": "token",
+									"value": "invitation_token_here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Register Invitee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"invitation_token_here\",\n  \"username\": \"janedoe\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/family/register-invitee",
+							"host": ["{{base_url}}"],
+							"path": ["family", "register-invitee"]
+						}
+					}
+				},
+				{
+					"name": "Get Family Members",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/family/members",
+							"host": ["{{base_url}}"],
+							"path": ["family", "members"]
+						}
+					}
+				},
+				{
+					"name": "Get Family Invitations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/family/invitations",
+							"host": ["{{base_url}}"],
+							"path": ["family", "invitations"]
+						}
+					}
+				},
+				{
+					"name": "Send Family Invitation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/family/invitations",
+							"host": ["{{base_url}}"],
+							"path": ["family", "invitations"]
+						}
+					}
+				},
+				{
+					"name": "Resend Family Invitation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/family/invitations/:invitation_id/resend",
+							"host": ["{{base_url}}"],
+							"path": ["family", "invitations", ":invitation_id", "resend"],
+							"variable": [
+								{
+									"key": "invitation_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Cancel Family Invitation",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/family/invitations/:invitation_id",
+							"host": ["{{base_url}}"],
+							"path": ["family", "invitations", ":invitation_id"],
+							"variable": [
+								{
+									"key": "invitation_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Upload",
+			"item": [
+				{
+					"name": "Upload Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "fileName",
+									"value": "statement.xlsx",
+									"type": "text"
+								},
+								{
+									"key": "fileType",
+									"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/upload/document",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "document"]
+						}
+					}
+				},
+				{
+					"name": "Upload Document from URL",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fileUrl",
+									"value": "https://example.com/statement.xlsx",
+									"type": "text"
+								},
+								{
+									"key": "fileName",
+									"value": "statement.xlsx",
+									"type": "text"
+								},
+								{
+									"key": "fileType",
+									"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/upload/document-from-url",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "document-from-url"]
+						}
+					}
+				},
+				{
+					"name": "Get Upload Progress",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/upload/progress/:file_id",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "progress", ":file_id"],
+							"variable": [
+								{
+									"key": "file_id",
+									"value": "file-uuid-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Uploaded Files",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/upload/files",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "files"]
+						}
+					}
+				},
+				{
+					"name": "Delete File",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/upload/files/:file_id",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "files", ":file_id"],
+							"variable": [
+								{
+									"key": "file_id",
+									"value": "file-uuid-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Process Document",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/upload/process/:file_id",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "process", ":file_id"],
+							"variable": [
+								{
+									"key": "file_id",
+									"value": "file-uuid-here"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Processing Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/upload/process-status/:file_id",
+							"host": ["{{base_url}}"],
+							"path": ["upload", "process-status", ":file_id"],
+							"variable": [
+								{
+									"key": "file_id",
+									"value": "file-uuid-here"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Billing",
+			"item": [
+				{
+					"name": "Get Billing Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/billing/summary",
+							"host": ["{{base_url}}"],
+							"path": ["billing", "summary"]
+						}
+					}
+				},
+				{
+					"name": "Subscribe",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"plan_name\": \"Premium\",\n  \"payment_method\": \"credit_card\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/billing/subscribe",
+							"host": ["{{base_url}}"],
+							"path": ["billing", "subscribe"]
+						}
+					}
+				},
+				{
+					"name": "Update Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"plan_name\": \"Enterprise\",\n  \"payment_method\": \"paypal\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/billing/update",
+							"host": ["{{base_url}}"],
+							"path": ["billing", "update"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Subscription",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/billing/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["billing", "cancel"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Feature Requests",
+			"item": [
+				{
+					"name": "Create Feature Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Add dark mode support\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/feature-requests/",
+							"host": ["{{base_url}}"],
+							"path": ["feature-requests", ""]
+						}
+					}
+				},
+				{
+					"name": "List Feature Requests",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/feature-requests/",
+							"host": ["{{base_url}}"],
+							"path": ["feature-requests", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Logs",
+			"item": [
+				{
+					"name": "Get System Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logs/system?level=ERROR&limit=100&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["logs", "system"],
+							"query": [
+								{
+									"key": "level",
+									"value": "ERROR"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logs/audit?event_type=LOGIN&limit=100&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["logs", "audit"],
+							"query": [
+								{
+									"key": "event_type",
+									"value": "LOGIN"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Error Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/logs/errors/summary?days=7",
+							"host": ["{{base_url}}"],
+							"path": ["logs", "errors", "summary"],
+							"query": [
+								{
+									"key": "days",
+									"value": "7"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create System Log",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"System Error\",\n  \"message\": \"An error occurred\",\n  \"category\": \"SYSTEM\",\n  \"source\": \"backend\",\n  \"level\": \"ERROR\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/logs/system",
+							"host": ["{{base_url}}"],
+							"path": ["logs", "system"]
+						}
+					}
+				},
+				{
+					"name": "Create Audit Log",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"event_type\": \"LOGIN\",\n  \"resource_type\": \"USER\",\n  \"action\": \"login\",\n  \"user_id\": 1,\n  \"is_successful\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/logs/audit",
+							"host": ["{{base_url}}"],
+							"path": ["logs", "audit"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Category Overrides",
+			"item": [
+				{
+					"name": "Create Category Override",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/category-overrides/",
+							"host": ["{{base_url}}"],
+							"path": ["category-overrides", ""]
+						}
+					}
+				},
+				{
+					"name": "List Category Overrides",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/category-overrides/?skip=0&limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["category-overrides", ""],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Category Override",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/category-overrides/:override_id",
+							"host": ["{{base_url}}"],
+							"path": ["category-overrides", ":override_id"],
+							"variable": [
+								{
+									"key": "override_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Category Override",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/category-overrides/:override_id",
+							"host": ["{{base_url}}"],
+							"path": ["category-overrides", ":override_id"],
+							"variable": [
+								{
+									"key": "override_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Category Override",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/category-overrides/:override_id",
+							"host": ["{{base_url}}"],
+							"path": ["category-overrides", ":override_id"],
+							"variable": [
+								{
+									"key": "override_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Create Report",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/reports/",
+							"host": ["{{base_url}}"],
+							"path": ["reports", ""]
+						}
+					}
+				},
+				{
+					"name": "List Reports",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/reports/?skip=0&limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["reports", ""],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/reports/:report_id",
+							"host": ["{{base_url}}"],
+							"path": ["reports", ":report_id"],
+							"variable": [
+								{
+									"key": "report_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Report",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/reports/:report_id",
+							"host": ["{{base_url}}"],
+							"path": ["reports", ":report_id"],
+							"variable": [
+								{
+									"key": "report_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Report",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/reports/:report_id",
+							"host": ["{{base_url}}"],
+							"path": ["reports", ":report_id"],
+							"variable": [
+								{
+									"key": "report_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Grocery Categories",
+			"item": [
+				{
+					"name": "Create Grocery Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/grocery-categories/",
+							"host": ["{{base_url}}"],
+							"path": ["grocery-categories", ""]
+						}
+					}
+				},
+				{
+					"name": "List Grocery Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/grocery-categories/?skip=0&limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["grocery-categories", ""],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Grocery Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/grocery-categories/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["grocery-categories", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Grocery Category",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/grocery-categories/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["grocery-categories", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Grocery Category",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/grocery-categories/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["grocery-categories", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Shopping Categories",
+			"item": [
+				{
+					"name": "Create Shopping Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shopping-categories/",
+							"host": ["{{base_url}}"],
+							"path": ["shopping-categories", ""]
+						}
+					}
+				},
+				{
+					"name": "List Shopping Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shopping-categories/?skip=0&limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["shopping-categories", ""],
+							"query": [
+								{
+									"key": "skip",
+									"value": "0"
+								},
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Shopping Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shopping-categories/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["shopping-categories", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Shopping Category",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shopping-categories/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["shopping-categories", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Shopping Category",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/shopping-categories/:category_id",
+							"host": ["{{base_url}}"],
+							"path": ["shopping-categories", ":category_id"],
+							"variable": [
+								{
+									"key": "category_id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "temp_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

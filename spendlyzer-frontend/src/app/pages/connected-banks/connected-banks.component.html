@@ -1,0 +1,135 @@
+<div class="connected-banks-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Connected Banks</h1>
+      <p class="page-subtitle">Manage your connected bank accounts and sync transactions</p>
+    </div>
+    <button class="connect-btn" (click)="openConnectionModal()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14m-7-7h14"/>
+      </svg>
+      Connect Bank
+    </button>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    {{ successMessage }}
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-error">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M12 8v4m0 4h.01"/>
+    </svg>
+    {{ error }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading connected banks...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && banks.length === 0" class="empty-state">
+    <div class="empty-icon">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <path d="M3 9h18M9 21V9"/>
+      </svg>
+    </div>
+    <h2 class="empty-title">No Banks Connected</h2>
+    <p class="empty-description">
+      Connect your bank account to automatically sync transactions and get insights into your spending.
+    </p>
+    <button class="connect-btn-large" (click)="openConnectionModal()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14m-7-7h14"/>
+      </svg>
+      Connect Your First Bank
+    </button>
+  </div>
+
+  <!-- Banks List -->
+  <div *ngIf="!isLoading && banks.length > 0" class="banks-grid">
+    <div *ngFor="let bank of banks" class="bank-card">
+      <!-- Bank Header -->
+      <div class="bank-header">
+        <div class="bank-info">
+          <div class="bank-icon">{{ getBankIcon(bank.bank_name) }}</div>
+          <div>
+            <h3 class="bank-name">{{ bank.bank_name }}</h3>
+            <p class="account-name">{{ bank.card_name }} •••• {{ bank.last4 }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sync Status -->
+      <div class="sync-status">
+        <div class="sync-info">
+          <span class="sync-label">Last synced:</span>
+          <span class="sync-time">{{ formatDate(bank.last_sync_date) }}</span>
+        </div>
+        <div *ngIf="bank.syncError" class="sync-error">
+          {{ bank.syncError }}
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="bank-actions">
+        <button 
+          class="sync-btn" 
+          (click)="syncBank(bank)"
+          [disabled]="bank.isSyncing"
+          [class.syncing]="bank.isSyncing">
+          <svg *ngIf="!bank.isSyncing" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <div *ngIf="bank.isSyncing" class="btn-spinner"></div>
+          {{ bank.isSyncing ? 'Syncing...' : 'Sync Now' }}
+        </button>
+        <button class="disconnect-btn" (click)="confirmDisconnect(bank)">
+          Disconnect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Connection Modal -->
+  <app-bank-connection-modal
+    [isOpen]="showConnectionModal"
+    (closeModal)="closeConnectionModal()"
+    (connectionSuccess)="handleConnectionSuccess($event)">
+  </app-bank-connection-modal>
+
+  <!-- Disconnect Confirmation Modal -->
+  <div *ngIf="showDisconnectConfirm" class="modal-overlay" (click)="cancelDisconnect()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v4m0 4h.01"/>
+        </svg>
+      </div>
+      <h3 class="confirm-title">Disconnect Bank?</h3>
+      <p class="confirm-message">
+        Are you sure you want to disconnect <strong>{{ bankToDisconnect?.bank_name }}</strong>? 
+        Your transaction history will remain, but new transactions won't be synced.
+      </p>
+      <div class="confirm-actions">
+        <button class="cancel-btn" (click)="cancelDisconnect()">Cancel</button>
+        <button class="confirm-btn" (click)="disconnectBank()">Disconnect</button>
+      </div>
+    </div>
+  </div>
+</div>
+

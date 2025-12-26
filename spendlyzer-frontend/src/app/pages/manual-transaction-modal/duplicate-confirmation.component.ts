@@ -1,11 +1,11 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { BulkUploadResponse } from '@app/services/manual-transaction.service';
+import { BulkUploadResponse } from '../../services/manual-transaction.service';
+import { Subject } from 'rxjs';
 
 /**
- * Dialog component for confirming duplicate transaction handling
+ * Modal component for confirming duplicate transaction handling
  * Displays flagged duplicates and allows user to accept or reject them
  */
 @Component({
@@ -13,17 +13,8 @@ import { BulkUploadResponse } from '@app/services/manual-transaction.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="w-full max-w-2xl">
-      <!-- Dialog Header -->
-      <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Duplicate Transactions Detected</h2>
-        <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-          We found {{ duplicateCount }} potential duplicate transaction(s).
-          Review and decide whether to keep them or discard them.
-        </p>
-      </div>
-
-      <!-- Dialog Body -->
+    <div class="w-full">
+      <!-- Modal Body -->
       <div class="px-6 py-6 max-h-96 overflow-y-auto">
         <!-- Summary Stats -->
         <div class="grid grid-cols-3 gap-4 mb-6">
@@ -104,7 +95,7 @@ import { BulkUploadResponse } from '@app/services/manual-transaction.service';
         </div>
       </div>
 
-      <!-- Dialog Footer -->
+      <!-- Modal Footer -->
       <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center space-x-3">
         <button
           (click)="onReject()"
@@ -135,7 +126,10 @@ import { BulkUploadResponse } from '@app/services/manual-transaction.service';
     }
   `]
 })
-export class DuplicateConfirmationComponent {
+export class DuplicateConfirmationComponent implements OnInit, OnChanges {
+  @Input() data?: BulkUploadResponse;
+  @Output() close = new Subject<any>();
+
   duplicates: any[] = [];
   successfulCount = 0;
   failedCount = 0;
@@ -144,11 +138,20 @@ export class DuplicateConfirmationComponent {
   userNotes = '';
   selectedDuplicates: { [key: number]: boolean } = {};
 
-  constructor(
-    public dialogRef: MatDialogRef<DuplicateConfirmationComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: BulkUploadResponse
-  ) {
-    this.initialize();
+  constructor() {
+    // Initialize will be called when data is set
+  }
+
+  ngOnChanges(): void {
+    if (this.data) {
+      this.initialize();
+    }
+  }
+
+  ngOnInit(): void {
+    if (this.data) {
+      this.initialize();
+    }
   }
 
   private initialize(): void {
@@ -203,7 +206,7 @@ export class DuplicateConfirmationComponent {
       .filter(([, selected]) => selected)
       .map(([id]) => parseInt(id));
 
-    this.dialogRef.close({
+    this.close.next({
       action: 'ACCEPT',
       duplicateIds: selectedIds,
       userNotes: this.userNotes
@@ -211,7 +214,7 @@ export class DuplicateConfirmationComponent {
   }
 
   onReject(): void {
-    this.dialogRef.close({
+    this.close.next({
       action: 'REJECT',
       duplicateIds: [],
       userNotes: this.userNotes
@@ -219,6 +222,6 @@ export class DuplicateConfirmationComponent {
   }
 
   onCancel(): void {
-    this.dialogRef.close(null);
+    this.close.next(null);
   }
 }

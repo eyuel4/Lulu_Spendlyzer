@@ -1,4 +1,5 @@
-import { Component, OnInit, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild, ElementRef, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService, Theme } from '../../services/theme.service';
@@ -10,7 +11,9 @@ import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridReadyEvent, GridApi, GridOptions } from 'ag-grid-community';
 import { ExpenseBreakdownComponent, CategoryData } from '../expense-breakdown/expense-breakdown.component';
 import { AddTransactionModalComponent } from '../add-transaction-modal/add-transaction-modal.component';
-import { ManualTransactionModalComponent, ManualTransaction } from '../manual-transaction-modal/manual-transaction-modal.component';
+import { ManualTransactionModalComponent } from '../manual-transaction-modal/manual-transaction-modal.component';
+import { BankConnectionModalComponent } from '../bank-connection-modal/bank-connection-modal.component';
+import { PlaidService, PlaidAccount } from '../../services/plaid.service';
 
 interface User {
   first_name?: string;
@@ -38,7 +41,7 @@ interface Transaction {
   standalone: true,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
-  imports: [ReactiveFormsModule, FormsModule, CommonModule, AgGridAngular, ExpenseBreakdownComponent, AddTransactionModalComponent, ManualTransactionModalComponent]
+  imports: [ReactiveFormsModule, FormsModule, CommonModule, AgGridAngular, ExpenseBreakdownComponent, AddTransactionModalComponent, ManualTransactionModalComponent, BankConnectionModalComponent]
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
   user: User | null = null;
@@ -98,6 +101,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   };
 
   categoryData: CategoryData[] = [];
+  
+  // Plaid integration
+  showBankConnectionModal = false;
+  connectedBanksCount = 0;
+  connectedBanks: PlaidAccount[] = [];
 
   constructor(
     private authService: AuthService,
@@ -105,7 +113,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private themeService: ThemeService,
     private notificationService: NotificationService,
-    private userPreferencesService: UserPreferencesService
+    private userPreferencesService: UserPreferencesService,
+    private plaidService: PlaidService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
@@ -116,6 +126,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.loadUserData();
     this.loadDashboardData();
     this.loadNotifications();
+    
+    // Only load connected banks in browser (avoid SSR issues)
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadConnectedBanks();
+    }
     
     // Subscribe to theme changes
     this.themeService.currentTheme$.subscribe(theme => {
@@ -627,7 +642,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.showManualTransactionModal = false;
   }
 
-  onManualTransactionsSaved(transactions: ManualTransaction[]): void {
+  onManualTransactionsSaved(transactions: any[]): void {
     console.log('Manual transactions saved:', transactions);
     // TODO: Save transactions to backend
     // For now, just close the modal
@@ -637,5 +652,36 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.loadDashboardData();
   }
 
+  // Plaid integration methods
+  loadConnectedBanks(): void {
+    this.plaidService.getConnectedAccounts().subscribe({
+      next: (accounts) => {
+        this.connectedBanks = accounts;
+        this.connectedBanksCount = accounts.length;
+      },
+      error: (err) => {
+        console.error('Error loading connected banks:', err);
+      }
+    });
+  }
+
+  openBankConnectionModal(): void {
+    this.showBankConnectionModal = true;
+  }
+
+  closeBankConnectionModal(): void {
+    this.showBankConnectionModal = false;
+  }
+
+  handleBankConnectionSuccess(result: any): void {
+    console.log('Bank connected successfully:', result);
+    this.showBankConnectionModal = false;
+    this.loadConnectedBanks();
+    this.loadDashboardData(); // Refresh dashboard with new transactions
+  }
+
+  navigateToConnectedBanks(): void {
+    this.router.navigate(['/connected-banks']);
+  }
 
 } 

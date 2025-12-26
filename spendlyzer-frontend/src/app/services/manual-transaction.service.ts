@@ -154,7 +154,7 @@ export class ManualTransactionService {
    */
   private loadMetadata(): void {
     const cacheKey = 'transaction_metadata';
-    const cached = this.cacheService.get(cacheKey);
+    const cached = this.cacheService.get<TransactionMetadata>(cacheKey);
 
     if (cached) {
       this.metadataSubject.next(cached);

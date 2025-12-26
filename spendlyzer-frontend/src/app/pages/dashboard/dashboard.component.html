@@ -664,14 +664,36 @@
               </svg>
             </button>
             
-            <button class="w-full flex items-center justify-between p-3 text-left bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-200">
+            <button 
+              (click)="openBankConnectionModal()"
+              class="w-full flex items-center justify-between p-3 text-left bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-200"
+            >
               <div class="flex items-center space-x-3">
                 <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
-                <span class="text-sm font-medium text-blue-900 dark:text-blue-100 transition-colors duration-200">Sync Bank</span>
+                <div>
+                  <span class="text-sm font-medium text-blue-900 dark:text-blue-100 transition-colors duration-200">Connect Bank</span>
+                  <p *ngIf="connectedBanksCount > 0" class="text-xs text-blue-700 dark:text-blue-300">{{ connectedBanksCount }} connected</p>
+                </div>
               </div>
               <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+            
+            <button 
+              *ngIf="connectedBanksCount > 0"
+              (click)="navigateToConnectedBanks()"
+              class="w-full flex items-center justify-between p-3 text-left bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors duration-200"
+            >
+              <div class="flex items-center space-x-3">
+                <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                </svg>
+                <span class="text-sm font-medium text-purple-900 dark:text-purple-100 transition-colors duration-200">Manage Banks</span>
+              </div>
+              <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </button>
@@ -798,4 +820,11 @@
     (closeModal)="onCloseManualTransactionModal()"
     (transactionsSaved)="onManualTransactionsSaved($event)"
   ></app-manual-transaction-modal>
+
+  <!-- Bank Connection Modal -->
+  <app-bank-connection-modal
+    [isOpen]="showBankConnectionModal"
+    (closeModal)="closeBankConnectionModal()"
+    (connectionSuccess)="handleBankConnectionSuccess($event)"
+  ></app-bank-connection-modal>
 </div> 

@@ -2,6 +2,673 @@
   display: block;
 }
 
+// Modal backdrop
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+// Modal content
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 80rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+.dark .modal-content {
+  background-color: #1e293b;
+}
+
+// Modal header
+.modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dark .modal-header {
+  border-bottom-color: #334155;
+}
+
+.modal-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.dark .modal-title {
+  color: #ffffff;
+}
+
+.modal-subtitle {
+  font-size: 0.875rem;
+  color: #475569;
+  margin-top: 0.25rem;
+}
+
+.dark .modal-subtitle {
+  color: #94a3b8;
+}
+
+.close-button {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #f1f5f9;
+  }
+}
+
+.dark .close-button:hover {
+  background-color: #334155;
+}
+
+.close-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #64748b;
+}
+
+.dark .close-icon {
+  color: #94a3b8;
+}
+
+// Modal body
+.modal-body {
+  padding: 1.5rem;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+// Tab navigation
+.tab-navigation {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dark .tab-navigation {
+  border-bottom-color: #334155;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease-in-out;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  color: #475569;
+}
+
+.dark .tab-button {
+  color: #cbd5e1;
+  border-bottom-color: #334155;
+}
+
+.tab-button.active {
+  border-bottom-color: #6366f1;
+  color: #4f46e5;
+}
+
+.dark .tab-button.active {
+  color: #4f46e5;
+}
+
+.tab-icon {
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+// Manual entry section
+.manual-entry-section {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.dark .section-title {
+  color: #ffffff;
+}
+
+.add-row-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #16a34a;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #15803d;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.5);
+  }
+}
+
+.add-row-icon {
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+// Grid container
+.grid-container {
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.dark .grid-container {
+  border-color: #334155;
+}
+
+// Instructions section
+.instructions-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+}
+
+.dark .instructions-section {
+  background-color: #334155;
+}
+
+.instructions-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.dark .instructions-title {
+  color: #ffffff;
+}
+
+.instructions-list {
+  font-size: 0.75rem;
+  color: #475569;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  li {
+    margin-bottom: 0.25rem;
+  }
+}
+
+.dark .instructions-list {
+  color: #94a3b8;
+}
+
+// CSV upload section
+.csv-upload-section {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.csv-upload-area {
+  flex: 1;
+  border: 2px dashed #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #818cf8;
+    background-color: #eef2ff;
+  }
+
+  &.dragging {
+    border-color: #818cf8;
+    background-color: #eef2ff;
+  }
+}
+
+.dark .csv-upload-area {
+  border-color: #475569;
+
+  &:hover {
+    border-color: #818cf8;
+    background-color: rgba(99, 102, 241, 0.1);
+  }
+
+  &.dragging {
+    border-color: #818cf8;
+    background-color: rgba(99, 102, 241, 0.1);
+  }
+}
+
+.csv-upload-icon {
+  width: 3rem;
+  height: 3rem;
+  color: #94a3b8;
+  margin-bottom: 0.75rem;
+}
+
+.dark .csv-upload-icon {
+  color: #64748b;
+}
+
+.csv-upload-text {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.csv-upload-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #0f172a;
+  display: block;
+}
+
+.dark .csv-upload-title {
+  color: #ffffff;
+}
+
+.csv-upload-subtitle {
+  font-size: 0.875rem;
+  color: #475569;
+  display: block;
+}
+
+.dark .csv-upload-subtitle {
+  color: #94a3b8;
+}
+
+.csv-file-input {
+  display: none;
+}
+
+.csv-select-button {
+  padding: 0.5rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #4f46e5;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #4338ca;
+  }
+}
+
+// CSV template section
+.csv-template-section {
+  padding: 1rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.dark .csv-template-section {
+  background-color: #334155;
+}
+
+.csv-template-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  margin-bottom: 0.75rem;
+}
+
+.dark .csv-template-title {
+  color: #ffffff;
+}
+
+.csv-template-description {
+  font-size: 0.75rem;
+  color: #475569;
+  margin-bottom: 0.75rem;
+}
+
+.dark .csv-template-description {
+  color: #94a3b8;
+}
+
+.csv-template-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4f46e5;
+  background-color: #ffffff;
+  border: 1px solid #4f46e5;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #eef2ff;
+  }
+}
+
+.dark .csv-template-button {
+  color: #818cf8;
+  background-color: #1e293b;
+  border-color: #818cf8;
+
+  &:hover {
+    background-color: #334155;
+  }
+}
+
+.csv-template-icon {
+  width: 1rem;
+  height: 1rem;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+// CSV progress/error/success messages
+.csv-progress {
+  padding: 1rem;
+  background-color: #dbeafe;
+  border-radius: 0.5rem;
+}
+
+.dark .csv-progress {
+  background-color: rgba(30, 58, 138, 0.2);
+}
+
+.csv-progress-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.csv-progress-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #2563eb;
+  animation: spin 1s linear infinite;
+}
+
+.dark .csv-progress-icon {
+  color: #60a5fa;
+}
+
+.csv-progress-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e40af;
+}
+
+.dark .csv-progress-text {
+  color: #93c5fd;
+}
+
+.csv-progress-filename {
+  font-size: 0.75rem;
+  color: #1e3a8a;
+}
+
+.dark .csv-progress-filename {
+  color: #bfdbfe;
+}
+
+.csv-error {
+  padding: 1rem;
+  background-color: #fef2f2;
+  border-radius: 0.5rem;
+}
+
+.dark .csv-error {
+  background-color: rgba(127, 29, 29, 0.2);
+}
+
+.csv-error-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #b91c1c;
+}
+
+.dark .csv-error-text {
+  color: #fca5a5;
+}
+
+.csv-success {
+  padding: 1rem;
+  background-color: #f0fdf4;
+  border-radius: 0.5rem;
+}
+
+.dark .csv-success {
+  background-color: rgba(20, 83, 45, 0.2);
+}
+
+.csv-success-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #15803d;
+}
+
+.dark .csv-success-text {
+  color: #86efac;
+}
+
+// Modal footer
+.modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dark .modal-footer {
+  border-top-color: #334155;
+}
+
+.footer-info {
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.dark .footer-info {
+  color: #94a3b8;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cancel-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #334155;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: #f8fafc;
+  }
+}
+
+.dark .cancel-button {
+  color: #cbd5e1;
+  background-color: #334155;
+  border-color: #475569;
+
+  &:hover {
+    background-color: #475569;
+  }
+}
+
+.save-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #4f46e5;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover:not(:disabled) {
+    background-color: #4338ca;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.5);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.save-button-icon {
+  width: 1rem;
+  height: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+// Toast notification
+.toast {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  max-width: 24rem;
+  z-index: 50;
+}
+
+.toast.error {
+  background-color: #fef2f2;
+}
+
+.dark .toast.error {
+  background-color: rgba(127, 29, 29, 0.2);
+}
+
+.toast.success {
+  background-color: #f0fdf4;
+}
+
+.dark .toast.success {
+  background-color: rgba(20, 83, 45, 0.2);
+}
+
+.toast.warning {
+  background-color: #fffbeb;
+}
+
+.dark .toast.warning {
+  background-color: rgba(146, 64, 14, 0.2);
+}
+
+.toast-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.toast-text.error {
+  color: #b91c1c;
+}
+
+.dark .toast-text.error {
+  color: #fca5a5;
+}
+
+.toast-text.success {
+  color: #15803d;
+}
+
+.dark .toast-text.success {
+  color: #86efac;
+}
+
+.toast-text.warning {
+  color: #b45309;
+}
+
+.dark .toast-text.warning {
+  color: #fcd34d;
+}
+
 // AG Grid v33+ Theming API - Custom styles
 ::ng-deep .ag-theme-quartz {
   --ag-header-height: 40px;
@@ -42,29 +709,6 @@
   background-color: #7f1d1d;
 }
 
-// Custom cell editor styles
-::ng-deep .ag-cell-edit-input {
-  border: 1px solid #3b82f6;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 14px;
-}
-
-// Delete button hover effect
-::ng-deep .ag-cell button:hover {
-  background-color: #fee2e2;
-  border-radius: 4px;
-}
-
-.dark ::ng-deep .ag-cell button:hover {
-  background-color: #7f1d1d;
-}
-
-// Additional custom styles for the manual transaction modal
-.modal-content {
-  animation: slideIn 0.3s ease-out;
-}
-
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -73,6 +717,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

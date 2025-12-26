@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AgGridModule } from 'ag-grid-angular';
 import { ColDef, GridApi, GridReadyEvent, ICellEditorParams, ICellRendererParams, ModuleRegistry, AllCommunityModule, GridOptions } from 'ag-grid-community';
 import { ThemeService, Theme } from '../../services/theme.service';
 import { ManualTransactionService, ManualTransaction as ServiceManualTransaction, TransactionMetadata, MetadataItem } from '../../services/manual-transaction.service';
+import { ModalService } from '../../services/modal.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { DuplicateConfirmationComponent } from './duplicate-confirmation.component';
@@ -46,30 +46,19 @@ export interface Card {
   lastFourDigits: string;
 }
 
-export interface ManualTransaction {
-  id?: string;
-  date: Date;
-  categoryId: number;
-  amount: number;
-  description: string;
-  merchant: string;
-  subcategoryId?: number;
-  budgetTypeId?: number;
-  bankTypeId?: number;
-  cardId?: number;
-}
+// Use ServiceManualTransaction from service instead of local interface
 
 @Component({
   selector: 'app-manual-transaction-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, AgGridModule, MatDialogModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, AgGridModule],
   templateUrl: './manual-transaction-modal.component.html',
   styleUrls: ['./manual-transaction-modal.component.scss']
 })
 export class ManualTransactionModalComponent implements OnInit, OnChanges, OnDestroy {
   @Input() isOpen = false;
   @Output() closeModal = new EventEmitter<void>();
-  @Output() transactionsSaved = new EventEmitter<ManualTransaction[]>();
+  @Output() transactionsSaved = new EventEmitter<ServiceManualTransaction[]>();
 
   public gridApi!: GridApi;
   rowData: ServiceManualTransaction[] = [];
@@ -121,7 +110,7 @@ export class ManualTransactionModalComponent implements OnInit, OnChanges, OnDes
     private fb: FormBuilder,
     private themeService: ThemeService,
     private manualTransactionService: ManualTransactionService,
-    private dialog: MatDialog
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -396,10 +385,10 @@ export class ManualTransactionModalComponent implements OnInit, OnChanges, OnDes
     }
   }
 
-  deleteRow(rowId: string): void {
-    const rowToDelete = this.rowData.find(row => row.id === rowId);
+  deleteRow(rowId: string | number | undefined): void {
+    const rowToDelete = this.rowData.find(row => row.id?.toString() === rowId?.toString());
     if (rowToDelete) {
-      this.rowData = this.rowData.filter(row => row.id !== rowId);
+      this.rowData = this.rowData.filter(row => row.id?.toString() !== rowId?.toString());
       if (this.gridApi) {
         this.gridApi.applyTransaction({ remove: [rowToDelete] });
       }
@@ -462,10 +451,10 @@ export class ManualTransactionModalComponent implements OnInit, OnChanges, OnDes
     this.manualTransactionService.createTransaction(transaction)
       .pipe(takeUntil(this.destroy$))
       .subscribe(
-        (response) => {
+        (response: ServiceManualTransaction) => {
           this.isSaving = false;
           this.showToast('Transaction saved successfully!', 'success');
-          this.transactionsSaved.emit([transaction]);
+          this.transactionsSaved.emit([response]);
           this.onCancel();
         },
         (error) => {
@@ -504,20 +493,21 @@ export class ManualTransactionModalComponent implements OnInit, OnChanges, OnDes
   }
 
   private openDuplicateDialog(response: any): void {
-    const dialogRef = this.dialog.open(DuplicateConfirmationComponent, {
-      width: '600px',
-      data: response
-    });
-
-    dialogRef.afterClosed()
+    this.modalService.open(DuplicateConfirmationComponent, {
+      size: '2xl',
+      title: 'Duplicate Transactions Detected',
+      data: response,
+      closable: true
+    })
       .pipe(takeUntil(this.destroy$))
-      .subscribe((result) => {
+      .subscribe((result: any) => {
         if (result) {
           this.confirmDuplicates(result);
         } else {
+          const currentData = [...this.rowData];
           this.rowData = [];
-          if (this.gridApi) {
-            this.gridApi.setRowData([]);
+          if (this.gridApi && currentData.length > 0) {
+            this.gridApi.applyTransaction({ remove: currentData });
           }
           this.showToast('Duplicate handling cancelled', 'info');
         }
@@ -536,9 +526,10 @@ export class ManualTransactionModalComponent implements OnInit, OnChanges, OnDes
       .subscribe(
         (response) => {
           this.showToast(`Duplicates ${result.action.toLowerCase()}ed successfully!`, 'success');
+          const currentData = [...this.rowData];
           this.rowData = [];
-          if (this.gridApi) {
-            this.gridApi.setRowData([]);
+          if (this.gridApi && currentData.length > 0) {
+            this.gridApi.applyTransaction({ remove: currentData });
           }
           this.transactionsSaved.emit([]);
           this.onCancel();
@@ -627,7 +618,7 @@ export class ManualTransactionModalComponent implements OnInit, OnChanges, OnDes
       }, 500);
     } catch (error: any) {
       this.csvError = error.message || 'Failed to parse CSV file';
-      this.showToast(this.csvError, 'error');
+      this.showToast(this.csvError || 'Failed to parse CSV file', 'error');
     } finally {
       this.csvUploading = false;
     }

@@ -188,4 +188,17 @@ export class CacheService {
       return { local: 0, session: 0 };
     }
   }
+
+  // Convenience methods that use local storage by default
+  get<T>(key: string): T | null {
+    return this.getLocal<T>(key);
+  }
+
+  set<T>(key: string, value: T, ttlMinutes: number = 60): void {
+    this.setLocal<T>(key, value, ttlMinutes);
+  }
+
+  remove(key: string): void {
+    this.removeLocal(key);
+  }
 } 

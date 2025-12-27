@@ -165,7 +165,8 @@ class PlaidService:
                 access_token=access_token,
                 plaid_item_id=item_id,
                 plaid_institution_id=institution_id,
-                last_sync_date=None
+                last_sync_date=None,
+                sync_enabled=True
             )
             
             db.add(new_card)
@@ -201,6 +202,9 @@ class PlaidService:
             created_at_val = card_after_sync.created_at or datetime.now()
             updated_at_val = card_after_sync.updated_at
             
+            # Extract sync_enabled
+            sync_enabled_val = card_after_sync.sync_enabled
+            
             # Manually construct response using extracted values
             card_response = PlaidAccountResponse(
                 id=card_id_val,
@@ -210,6 +214,7 @@ class PlaidService:
                 plaid_item_id=plaid_item_id_val,
                 plaid_institution_id=plaid_institution_id_val,
                 last_sync_date=last_sync_date_val,
+                sync_enabled=sync_enabled_val,
                 created_at=created_at_val,
                 updated_at=updated_at_val
             )
@@ -366,6 +371,7 @@ class PlaidService:
                     plaid_item_id=card.plaid_item_id,
                     plaid_institution_id=card.plaid_institution_id,
                     last_sync_date=card.last_sync_date,
+                    sync_enabled=card.sync_enabled,
                     created_at=card.created_at,
                     updated_at=card.updated_at
                 ))
@@ -419,6 +425,60 @@ class PlaidService:
             
         except Exception as e:
             logger.error(f"Error disconnecting card {card_id}: {e}")
+            await db.rollback()
+            raise
+
+    async def toggle_sync_status(
+        self,
+        card_id: int,
+        enabled: bool,
+        db: AsyncSession
+    ) -> PlaidAccountResponse:
+        """
+        Toggle sync enabled status for a card
+        
+        Args:
+            card_id: ID of the card
+            enabled: Whether to enable or disable sync
+            db: Database session
+            
+        Returns:
+            Updated PlaidAccountResponse
+        """
+        try:
+            # Get card from database
+            result = await db.execute(select(Card).filter(Card.id == card_id))
+            card = result.scalar_one_or_none()
+            
+            if not card:
+                raise ValueError(f"Card with ID {card_id} not found")
+            
+            # Update sync_enabled status
+            card.sync_enabled = enabled
+            await db.commit()
+            
+            # Re-query to get updated card
+            result = await db.execute(select(Card).filter(Card.id == card_id))
+            card = result.scalar_one()
+            
+            logger.info(f"Sync status toggled for card {card_id}: sync_enabled={enabled}")
+            
+            # Extract all attributes
+            return PlaidAccountResponse(
+                id=card.id,
+                bank_name=card.bank_name,
+                card_name=card.card_name,
+                last4=card.last4,
+                plaid_item_id=card.plaid_item_id,
+                plaid_institution_id=card.plaid_institution_id,
+                last_sync_date=card.last_sync_date,
+                sync_enabled=card.sync_enabled,
+                created_at=card.created_at,
+                updated_at=card.updated_at
+            )
+            
+        except Exception as e:
+            logger.error(f"Error toggling sync status for card {card_id}: {e}")
             await db.rollback()
             raise
 

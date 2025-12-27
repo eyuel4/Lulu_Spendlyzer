@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette.requests import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
@@ -148,6 +148,41 @@ async def sync_transactions(
         raise HTTPException(status_code=500, detail="Failed to sync transactions")
 
 
+@router.put("/toggle-sync/{card_id}", response_model=PlaidAccountResponse)
+async def toggle_sync(
+    card_id: int,
+    enabled: bool = Query(..., description="Enable or disable sync"),
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Toggle sync enabled status for a Plaid bank account
+    """
+    try:
+        # Verify card belongs to user
+        from app.models.card import Card
+        from sqlalchemy import select
+        
+        result = await db.execute(
+            select(Card).filter(Card.id == card_id, Card.user_id == user_id)
+        )
+        card = result.scalar_one_or_none()
+        
+        if not card:
+            raise HTTPException(status_code=404, detail="Card not found or access denied")
+        
+        plaid_service = get_plaid_service()
+        updated_card = await plaid_service.toggle_sync_status(card_id, enabled, db)
+        return updated_card
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error toggling sync status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to toggle sync status")
+
+
 @router.delete("/disconnect/{card_id}", response_model=PlaidDisconnectResponse)
 async def disconnect_account(
     card_id: int,
@@ -214,6 +249,11 @@ async def plaid_webhook(
         # Handle different webhook types
         if webhook_type == "TRANSACTIONS":
             if webhook_code in ["INITIAL_UPDATE", "HISTORICAL_UPDATE", "DEFAULT_UPDATE"]:
+                # Check if sync is enabled before triggering sync
+                if not card.sync_enabled:
+                    logger.info(f"Skipping sync for card {card.id} - sync is disabled")
+                    return {"status": "skipped", "reason": "sync_disabled"}
+                
                 # Trigger transaction sync
                 logger.info(f"Triggering sync for card {card.id} due to webhook {webhook_code}")
                 plaid_service = get_plaid_service()

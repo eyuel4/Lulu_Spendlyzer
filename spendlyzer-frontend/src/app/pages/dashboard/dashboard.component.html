@@ -583,8 +583,8 @@
         </div>
         <div class="mt-4">
           <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-            <div class="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-colors duration-200" 
-                 [style.width.%]="dashboardData ? (dashboardData.totalSpending / dashboardData.monthlyBudget * 100) : 0"></div>
+            <div class="stat-progress-bar" 
+                 [style.--progress-width]="(dashboardData ? (dashboardData.totalSpending / dashboardData.monthlyBudget * 100) : 0) + '%'"></div>
           </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 transition-colors duration-200">
             {{ getBudgetPercentage() }}% used
@@ -743,19 +743,50 @@
       <!-- Transactions -->
       <div class="lg:col-span-3">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-200">
-          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white transition-colors duration-200">Transactions</h3>
+            <button 
+              (click)="viewAllTransactions()"
+              class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200">
+              View More →
+            </button>
           </div>
           <div class="p-6">
-            <ag-grid-angular
-              class="w-full h-64"
-              [rowData]="rowData"
-              [columnDefs]="columnDefs"
-              [defaultColDef]="defaultColDef"
-              [gridOptions]="gridOptions"
-              (gridReady)="onGridReady($event)"
-            >
-            </ag-grid-angular>
+            <!-- Loading State -->
+            <div *ngIf="dataLoading" class="flex items-center justify-center h-64">
+              <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400 mb-4"></div>
+                <p class="text-slate-600 dark:text-slate-400">Loading transactions...</p>
+              </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div *ngIf="!dataLoading && rowData.length === 0" class="flex flex-col items-center justify-center h-64 text-center">
+              <svg class="w-16 h-16 text-slate-400 dark:text-slate-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">No Transactions Found</h3>
+              <p class="text-slate-600 dark:text-slate-400 mb-4">Connect a bank account or add a manual transaction to get started.</p>
+              <button 
+                (click)="onAddTransactionClick()"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                Add Transaction
+              </button>
+            </div>
+            
+            <!-- Transactions Grid -->
+            <div *ngIf="!dataLoading && rowData.length > 0" class="dashboard-transactions-grid">
+              <ag-grid-angular
+                class="ag-theme-alpine w-full"
+                [ngClass]="{'ag-theme-alpine-dark': currentTheme === 'dark'}"
+                [rowData]="rowData"
+                [columnDefs]="columnDefs"
+                [defaultColDef]="defaultColDef"
+                [gridOptions]="gridOptions"
+                (gridReady)="onGridReady($event)"
+              >
+              </ag-grid-angular>
+            </div>
           </div>
         </div>
       </div>

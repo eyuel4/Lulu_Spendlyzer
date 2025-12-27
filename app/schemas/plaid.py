@@ -31,6 +31,7 @@ class PlaidAccountResponse(BaseModel):
     plaid_item_id: Optional[str] = None
     plaid_institution_id: Optional[str] = None
     last_sync_date: Optional[datetime] = None
+    sync_enabled: bool = True
     created_at: datetime
     updated_at: Optional[datetime] = None
 

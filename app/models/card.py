@@ -1,4 +1,4 @@
-from sqlalchemy import String, Column, Integer, ForeignKey, DateTime
+from sqlalchemy import String, Column, Integer, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from .base import BaseModel
 
@@ -15,6 +15,7 @@ class Card(BaseModel):
     plaid_item_id = Column(String, nullable=True)  # Plaid item ID for webhook tracking
     plaid_institution_id = Column(String, nullable=True)  # Plaid institution identifier
     last_sync_date = Column(DateTime, nullable=True)  # Track last transaction sync
+    sync_enabled = Column(Boolean, default=True, nullable=False)  # Control automatic syncing
 
     user = relationship("User", back_populates="cards")
     transactions = relationship("Transaction", back_populates="card", cascade="all, delete-orphan") 

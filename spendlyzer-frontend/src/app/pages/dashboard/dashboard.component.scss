@@ -41,3 +41,109 @@
 .dark .notification-dropdown .max-h-96::-webkit-scrollbar-thumb:hover {
   background-color: rgb(51 65 85);
 }
+
+// Budget Progress Bar - Dynamic width using CSS custom property
+.stat-progress-bar {
+  background-color: rgb(37, 99, 235);
+  height: 0.5rem;
+  border-radius: 9999px;
+  transition: width 0.3s ease-in-out, background-color 0.2s ease-in-out;
+  width: var(--progress-width, 0%);
+}
+
+.dark .stat-progress-bar {
+  background-color: rgb(59, 130, 246);
+}
+
+// Dashboard Transactions Grid - Fixed height to prevent overflow
+.dashboard-transactions-grid {
+  height: 400px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  ::ng-deep {
+    ag-grid-angular {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    
+    .ag-theme-alpine,
+    .ag-theme-alpine-dark {
+      --ag-background-color: transparent;
+      --ag-header-background-color: transparent;
+      --ag-odd-row-background-color: transparent;
+      --ag-row-hover-color: rgba(99, 102, 241, 0.1);
+      --ag-header-foreground-color: rgb(51, 65, 85);
+      --ag-foreground-color: rgb(15, 23, 42);
+      --ag-border-color: rgb(226, 232, 240);
+      --ag-font-size: 14px;
+      --ag-font-family: inherit;
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .ag-theme-alpine-dark {
+      --ag-row-hover-color: rgba(99, 102, 241, 0.2);
+      --ag-header-foreground-color: rgb(203, 213, 225);
+      --ag-foreground-color: rgb(241, 245, 249);
+      --ag-border-color: rgb(51, 65, 85);
+    }
+    
+    .ag-root-wrapper {
+      height: 100% !important;
+      width: 100% !important;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+    
+    .ag-root {
+      height: 100% !important;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+    
+    .ag-body-viewport-wrapper {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    
+    .ag-body-viewport {
+      overflow-y: auto !important;
+      height: 100% !important;
+    }
+    
+    .ag-header {
+      flex-shrink: 0;
+    }
+    
+    .ag-header-cell {
+      font-weight: 600;
+      text-transform: none;
+      padding: 12px 16px;
+    }
+    
+    .ag-cell {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .ag-row {
+      border-bottom: 1px solid rgb(226, 232, 240);
+    }
+    
+    .dark .ag-row {
+      border-bottom-color: rgb(51, 65, 85);
+    }
+  }
+}

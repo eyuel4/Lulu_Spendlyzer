@@ -51,5 +51,13 @@ export const routes: Routes = [
     path: 'request-feature',
     loadComponent: () => import('./pages/request-feature/request-feature.component').then(m => m.RequestFeatureComponent)
   },
+  {
+    path: 'transactions',
+    loadComponent: () => import('./pages/transactions-list/transactions-list.component').then(m => m.TransactionsListComponent)
+  },
+  {
+    path: 'manage-banks',
+    loadComponent: () => import('./pages/connected-banks/connected-banks.component').then(m => m.ConnectedBanksComponent)
+  },
   { path: '**', redirectTo: '/signin' }
 ];

@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ViewChild, ElementRef, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef, AfterViewInit, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -14,6 +14,9 @@ import { AddTransactionModalComponent } from '../add-transaction-modal/add-trans
 import { ManualTransactionModalComponent } from '../manual-transaction-modal/manual-transaction-modal.component';
 import { BankConnectionModalComponent } from '../bank-connection-modal/bank-connection-modal.component';
 import { PlaidService, PlaidAccount } from '../../services/plaid.service';
+import { TransactionService, Transaction as ApiTransaction } from '../../services/transaction.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 interface User {
   first_name?: string;
@@ -43,7 +46,7 @@ interface Transaction {
   styleUrls: ['./dashboard.component.scss'],
   imports: [ReactiveFormsModule, FormsModule, CommonModule, AgGridAngular, ExpenseBreakdownComponent, AddTransactionModalComponent, ManualTransactionModalComponent, BankConnectionModalComponent]
 })
-export class DashboardComponent implements OnInit, AfterViewInit {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   user: User | null = null;
   recentTransactions: Transaction[] = [];
   loading = true;
@@ -69,7 +72,17 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   gridApi!: GridApi;
   rowData: Transaction[] = [];
   columnDefs: ColDef[] = [
-    { field: 'date', headerName: 'Date', sortable: true, filter: true, width: 120 },
+    { 
+      field: 'date', 
+      headerName: 'Date', 
+      sortable: true, 
+      filter: true, 
+      width: 120,
+      valueFormatter: (params: any) => {
+        if (!params.value) return '';
+        return new Date(params.value).toLocaleDateString();
+      }
+    },
     { field: 'merchant', headerName: 'Merchant', sortable: true, filter: true, width: 200 },
     { field: 'description', headerName: 'Description', sortable: true, filter: true, width: 250 },
     { field: 'category', headerName: 'Category', sortable: true, filter: true, width: 150 },
@@ -95,9 +108,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   // AG Grid v33+ theme configuration
   gridOptions: GridOptions = {
-    domLayout: 'autoHeight',
+    domLayout: 'normal',
     animateRows: true,
-    rowSelection: 'single'
+    rowSelection: 'single',
+    suppressHorizontalScroll: false
   };
 
   categoryData: CategoryData[] = [];
@@ -107,6 +121,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   connectedBanksCount = 0;
   connectedBanks: PlaidAccount[] = [];
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -115,6 +131,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     private notificationService: NotificationService,
     private userPreferencesService: UserPreferencesService,
     private plaidService: PlaidService,
+    private transactionService: TransactionService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -140,6 +157,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     // Component initialization
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   logout(): void {
@@ -324,7 +346,12 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   onGridReady(params: GridReadyEvent): void {
     this.gridApi = params.api;
-    this.gridApi.sizeColumnsToFit();
+    // Auto-size columns to fit container
+    setTimeout(() => {
+      if (this.gridApi) {
+        this.gridApi.sizeColumnsToFit();
+      }
+    }, 100);
   }
 
   getCategoryIcon(category: string): string {
@@ -433,126 +460,76 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   private loadDashboardData(): void {
-    // Mock data based on selected month and year
-    const mockData = this.getMockDataForMonthYear(this.selectedMonth, this.selectedYear);
-    this.dashboardData = mockData;
-    this.rowData = mockData.transactions;
-    this.categoryData = mockData.categoryData;
+    this.dataLoading = true;
     
-    // Component data loaded
-  }
-
-  private getMockDataForMonthYear(month: number, year: number): any {
-    const baseTransactions = [
-      {
-        id: 1,
-        description: 'Grocery Store',
-        category: 'Food & Dining',
-        amount: 85.50,
-        date: '2024-01-15',
-        type: 'expense' as const,
-        merchant: 'Walmart'
-      },
-      {
-        id: 2,
-        description: 'Gas Station',
-        category: 'Transportation',
-        amount: 45.00,
-        date: '2024-01-14',
-        type: 'expense' as const,
-        merchant: 'Shell'
-      },
-      {
-        id: 3,
-        description: 'Netflix Subscription',
-        category: 'Entertainment',
-        amount: 15.99,
-        date: '2024-01-13',
-        type: 'expense' as const,
-        merchant: 'Netflix'
-      },
-      {
-        id: 4,
-        description: 'Coffee Shop',
-        category: 'Food & Dining',
-        amount: 4.50,
-        date: '2024-01-12',
-        type: 'expense' as const,
-        merchant: 'Starbucks'
-      },
-      {
-        id: 5,
-        description: 'Rent Payment',
-        category: 'Housing',
-        amount: 1200.00,
-        date: '2024-01-01',
-        type: 'expense' as const,
-        merchant: 'Property Management'
-      },
-      {
-        id: 6,
-        description: 'Electric Bill',
-        category: 'Utilities',
-        amount: 89.50,
-        date: '2024-01-10',
-        type: 'expense' as const,
-        merchant: 'Power Company'
-      },
-      {
-        id: 7,
-        description: 'Salary',
-        category: 'Income',
-        amount: 5000.00,
-        date: '2024-01-01',
-        type: 'income' as const,
-        merchant: 'Company Inc'
-      }
-    ];
-
-    // Generate mock data based on month and year
+    // Build month_id from selected month and year
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                        'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthId = `${monthNames[this.selectedMonth - 1]}_${this.selectedYear}`;
     
-    // Simulate different spending patterns based on month
-    let totalSpending = 2847.32;
-    let savings = 1152.68;
-    let transactionCount = 47;
-    
-    // Adjust spending based on month (holiday season, etc.)
-    if (month === 12) { // December - holiday spending
-      totalSpending = 4200.00;
-      savings = 800.00;
-      transactionCount = 65;
-    } else if (month === 7 || month === 8) { // Summer months
-      totalSpending = 3200.00;
-      savings = 1800.00;
-      transactionCount = 55;
-    } else if (month === 1) { // January - post-holiday
-      totalSpending = 2200.00;
-      savings = 2800.00;
-      transactionCount = 40;
-    }
-    
-    // Adjust for year (inflation, etc.)
-    const yearDiff = year - 2024;
-    if (yearDiff > 0) {
-      totalSpending *= (1 + yearDiff * 0.05); // 5% increase per year
-      savings *= (1 + yearDiff * 0.03); // 3% increase per year
-    } else if (yearDiff < 0) {
-      totalSpending *= (1 + yearDiff * 0.05); // 5% decrease per year
-      savings *= (1 + yearDiff * 0.03); // 3% decrease per year
-    }
-    
-    return {
-      totalSpending: Math.round(totalSpending * 100) / 100,
-      monthlyBudget: 4000,
-      savings: Math.round(savings * 100) / 100,
-      transactionCount: transactionCount,
-      transactions: baseTransactions,
-      categoryData: this.generateCategoryData(baseTransactions),
-      periodName: `${monthNames[month - 1]} ${year}`
-    };
+    // Fetch transactions from API
+    this.transactionService.getTransactions({
+      skip: 0,
+      limit: 10, // Show recent 10 transactions on dashboard
+      month: monthId
+    }).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (transactions: ApiTransaction[]) => {
+        // Transform API transactions to dashboard format
+        const transformedTransactions = this.transformTransactions(transactions);
+        this.rowData = transformedTransactions;
+        
+        // Generate category data from transactions
+        this.categoryData = this.generateCategoryData(transformedTransactions);
+        
+        // Update dashboard data
+        const totalSpending = transformedTransactions
+          .filter(t => t.type === 'expense')
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        
+        this.dashboardData = {
+          totalSpending: totalSpending,
+          monthlyBudget: 4000, // TODO: Get from user preferences
+          savings: 4000 - totalSpending,
+          transactionCount: transactions.length,
+          transactions: transformedTransactions,
+          categoryData: this.categoryData,
+          periodName: `${monthNames[this.selectedMonth - 1]} ${this.selectedYear}`
+        };
+        
+        this.dataLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading transactions:', error);
+        this.error = 'Failed to load transactions';
+        this.rowData = [];
+        this.categoryData = [];
+        this.dashboardData = {
+          totalSpending: 0,
+          monthlyBudget: 4000,
+          savings: 4000,
+          transactionCount: 0,
+          transactions: [],
+          categoryData: [],
+          periodName: `${monthNames[this.selectedMonth - 1]} ${this.selectedYear}`
+        };
+        this.dataLoading = false;
+      }
+    });
   }
+
+  private transformTransactions(apiTransactions: ApiTransaction[]): Transaction[] {
+    return apiTransactions.map(t => ({
+      id: t.id,
+      description: t.name || 'Transaction',
+      category: t.expense_category_name || t.custom_category || t.plaid_category || 'Uncategorized',
+      amount: Math.abs(t.amount),
+      date: t.date,
+      type: t.amount < 0 ? 'expense' : 'income',
+      merchant: t.merchant_name || t.name || 'Unknown'
+    }));
+  }
+
 
   private generateCategoryData(transactions: Transaction[]): CategoryData[] {
     const categoryMap = new Map<string, number>();
@@ -582,6 +559,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   onCloseAddTransactionModal(): void {
     this.showAddTransactionModal = false;
+  }
+
+  viewAllTransactions(): void {
+    this.router.navigate(['/transactions']);
   }
 
   onTransactionOptionSelected(data: {option: string, setAsDefault: boolean}): void {
@@ -644,11 +625,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   onManualTransactionsSaved(transactions: any[]): void {
     console.log('Manual transactions saved:', transactions);
-    // TODO: Save transactions to backend
-    // For now, just close the modal
     this.showManualTransactionModal = false;
     
-    // Optionally refresh the dashboard data
+    // Refresh the dashboard data to show new transactions
     this.loadDashboardData();
   }
 
@@ -681,7 +660,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   navigateToConnectedBanks(): void {
-    this.router.navigate(['/connected-banks']);
+    this.router.navigate(['/manage-banks']);
   }
 
 } 

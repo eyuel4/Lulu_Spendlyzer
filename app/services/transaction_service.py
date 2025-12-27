@@ -1,9 +1,11 @@
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_, func, or_
 from sqlalchemy.orm import selectinload
 from app.models.transaction import Transaction
+from app.models.card import Card
+from app.models.expense_category import ExpenseCategory
 from app.models.user import User as UserModel
 from app.core.cache import RedisCache, CacheKeys
 from app.schemas.transaction import TransactionCreate, TransactionUpdate, TransactionResponse
@@ -90,39 +92,87 @@ class TransactionService:
         db: AsyncSession,
         skip: int = 0, 
         limit: int = 100,
-        month: Optional[str] = None
+        month: Optional[str] = None,
+        card_id: Optional[int] = None,
+        bank_name: Optional[str] = None,
+        merchant_name: Optional[str] = None,
+        expense_category_id: Optional[int] = None,
+        custom_category: Optional[str] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        currency: Optional[str] = None
     ) -> List[TransactionResponse]:
-        """List transactions with caching"""
-        cache_key = CacheKeys.transactions(user_id, month) if month else CacheKeys.transactions(user_id)
+        """List transactions with filtering and caching"""
+        # Build cache key from filters (only cache simple queries)
+        use_cache = not any([card_id, bank_name, merchant_name, expense_category_id, custom_category, start_date, end_date, currency])
+        cache_key = CacheKeys.transactions(user_id, month) if (month and use_cache) else CacheKeys.transactions(user_id) if use_cache else None
         
-        # Try cache first
-        cached_transactions = await self.cache.get(cache_key)
-        if cached_transactions:
-            logger.debug(f"Cache HIT: transactions for user {user_id}")
-            # Apply pagination to cached results
-            start = skip
-            end = skip + limit
-            return [TransactionResponse(**t) for t in cached_transactions[start:end]]
+        # Try cache first (only for simple queries)
+        if cache_key:
+            cached_transactions = await self.cache.get(cache_key)
+            if cached_transactions:
+                logger.debug(f"Cache HIT: transactions for user {user_id}")
+                # Apply pagination to cached results
+                start = skip
+                end = skip + limit
+                return [TransactionResponse(**t) for t in cached_transactions[start:end]]
         
-        # Build query
-        query = select(Transaction).where(Transaction.user_id == user_id)
+        # Build query with joins
+        query = select(Transaction).join(Card, Transaction.card_id == Card.id).where(Transaction.user_id == user_id)
         
+        # Apply filters
         if month:
             query = query.where(Transaction.month_id == month)
         
-        query = query.options(selectinload(Transaction.user), selectinload(Transaction.card))
+        if card_id:
+            query = query.where(Transaction.card_id == card_id)
+        
+        if bank_name:
+            query = query.where(Card.bank_name.ilike(f"%{bank_name}%"))
+        
+        if merchant_name:
+            query = query.where(Transaction.merchant_name.ilike(f"%{merchant_name}%"))
+        
+        if expense_category_id:
+            query = query.where(Transaction.expense_category_id == expense_category_id)
+        
+        if custom_category:
+            query = query.where(Transaction.custom_category.ilike(f"%{custom_category}%"))
+        
+        if start_date:
+            query = query.where(Transaction.date >= start_date)
+        
+        if end_date:
+            query = query.where(Transaction.date <= end_date)
+        
+        if currency:
+            query = query.where(Transaction.currency == currency)
+        
+        # Load relationships
+        query = query.options(selectinload(Transaction.user), selectinload(Transaction.card), selectinload(Transaction.expense_category))
         query = query.offset(skip).limit(limit).order_by(Transaction.date.desc())
         
         result = await db.execute(query)
         transactions = result.scalars().all()
         
-        # Convert to response models
-        transaction_responses = [TransactionResponse.from_orm(t) for t in transactions]
+        # Convert to response models with relationship data
+        transaction_responses = []
+        for t in transactions:
+            try:
+                response = TransactionResponse.from_orm_with_relationships(t)
+                transaction_responses.append(response)
+            except Exception as e:
+                # Fallback to basic from_orm if relationship loading fails
+                logger.warning(f"Error loading relationships for transaction {t.id}: {e}")
+                basic_response = TransactionResponse.model_validate(t)
+                transaction_responses.append(basic_response)
         
-        # Cache the full result (without pagination)
-        if not month:
+        # Cache the full result (without pagination) only for simple queries
+        if cache_key and not any([card_id, bank_name, merchant_name, expense_category_id, custom_category, start_date, end_date, currency]):
             # Cache all transactions for this user
             full_query = select(Transaction).where(Transaction.user_id == user_id)
+            if month:
+                full_query = full_query.where(Transaction.month_id == month)
             full_query = full_query.options(selectinload(Transaction.user), selectinload(Transaction.card))
             full_query = full_query.order_by(Transaction.date.desc())
             
@@ -155,16 +205,33 @@ class TransactionService:
             # Update fields
             update_data = transaction_data.dict(exclude_unset=True)
             for field, value in update_data.items():
-                setattr(transaction, field, value)
+                # Handle card_id update - if card_id changes, we may need to update bank_name
+                if field == 'card_id' and value:
+                    # Verify card belongs to user
+                    card_result = await db.execute(select(Card).filter(Card.id == value, Card.user_id == user_id))
+                    card = card_result.scalar_one_or_none()
+                    if not card:
+                        raise ValueError(f"Card with ID {value} not found or access denied")
+                    setattr(transaction, field, value)
+                else:
+                    setattr(transaction, field, value)
             
             await db.commit()
-            await db.refresh(transaction)
+            
+            # Reload transaction with relationships after update
+            result = await db.execute(
+                select(Transaction)
+                .where(Transaction.id == transaction_id)
+                .options(selectinload(Transaction.user), selectinload(Transaction.card), selectinload(Transaction.expense_category))
+            )
+            transaction = result.scalar_one()
             
             # Invalidate caches
             await self.cache.delete(CacheKeys.transaction(transaction_id))
             await self._invalidate_user_transaction_caches(user_id, str(transaction.month_id))
             
-            return TransactionResponse.from_orm(transaction)
+            # Return with relationship data
+            return TransactionResponse.from_orm_with_relationships(transaction)
             
         except Exception as e:
             logger.error(f"Error updating transaction: {e}")

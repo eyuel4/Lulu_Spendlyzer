@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface LinkTokenResponse {
   link_token: string;
@@ -24,6 +25,7 @@ export interface PlaidAccount {
   plaid_item_id?: string;
   plaid_institution_id?: string;
   last_sync_date?: string;
+  sync_enabled?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -51,16 +53,12 @@ export class PlaidService {
 
   constructor(
     private http: HttpClient,
+    private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   private getHeaders(): HttpHeaders {
-    let token = '';
-    
-    // Only access localStorage in browser environment
-    if (isPlatformBrowser(this.platformId)) {
-      token = localStorage.getItem('token') || '';
-    }
+    const token = this.authService.getToken() || '';
     
     return new HttpHeaders({
       'Content-Type': 'application/json',
@@ -110,6 +108,17 @@ export class PlaidService {
   syncTransactions(cardId: number): Observable<PlaidSyncResponse> {
     return this.http.post<PlaidSyncResponse>(
       `${this.apiUrl}/sync-transactions/${cardId}`,
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
+
+  /**
+   * Toggle sync enabled status for a bank account
+   */
+  toggleSync(cardId: number, enabled: boolean): Observable<PlaidAccount> {
+    return this.http.put<PlaidAccount>(
+      `${this.apiUrl}/toggle-sync/${cardId}?enabled=${enabled}`,
       {},
       { headers: this.getHeaders() }
     );
